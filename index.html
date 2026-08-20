@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Fluxo de Caixa</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f6f8;
+    color: #222;
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* MENU */
+
+.sidebar {
+    width: 240px;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    padding: 24px 16px;
+    position: fixed;
+    height: 100vh;
+}
+
+.logo {
+    font-size: 21px;
+    font-weight: bold;
+    margin-bottom: 35px;
+}
+
+.logo span {
+    color: #2563eb;
+}
+
+.menu-title {
+    font-size: 11px;
+    color: #8b8f98;
+    margin: 20px 10px 8px;
+    text-transform: uppercase;
+}
+
+.menu button {
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 3px;
+}
+
+.menu button:hover,
+.menu button.active {
+    background: #eef2ff;
+    color: #2563eb;
+}
+
+/* CONTEÚDO */
+
+.main {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    padding: 30px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 28px;
+}
+
+.periodo {
+    display: flex;
+    gap: 10px;
+}
+
+select,
+input,
+button {
+    font-family: inherit;
+}
+
+select,
+input {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: white;
+}
+
+/* CARDS */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e7e7e7;
+}
+
+.card-title {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+.card-value {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.entrada {
+    color: #16803c;
+}
+
+.saida {
+    color: #c0392b;
+}
+
+.resultado {
+    color: #2563eb;
+}
+
+/* SEÇÕES */
+
+.section {
+    background: white;
+    border: 1px solid #e7e7e7;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-header h2 {
+    font-size: 17px;
+}
+
+.btn {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    opacity: .9;
+}
+
+.btn-secondary {
+    background: #f1f3f5;
+    color: #333;
+}
+
+/* TABELAS */
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 13px 18px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    font-size: 14px;
+}
+
+th {
+    color: #777;
+    font-size: 12px;
+    background: #fafafa;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* MODAL */
+
+.modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal {
+    background: white;
+    width: 500px;
+    max-width: 92%;
+    border-radius: 14px;
+    padding: 25px;
+}
+
+.modal h2 {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #555;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* PÁGINAS */
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* RESPONSIVO */
+
+@media(max-width: 900px) {
+
+    .sidebar {
+        width: 190px;
+    }
+
+    .main {
+        margin-left: 190px;
+        width: calc(100% - 190px);
+    }
+
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 650px) {
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .app {
+        display: block;
+    }
+
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 18px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .header {
+        display: block;
+    }
+
+    .periodo {
+        margin-top: 15px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- MENU LATERAL -->
+
+<aside class="sidebar">
+
+    <div class="logo">
+        Fluxo<span>+</span>
+    </div>
+
+    <div class="menu">
+
+        <button class="active" onclick="abrirPagina('dashboard', this)">
+            🏠 Dashboard
+        </button>
+
+        <button onclick="abrirPagina('fluxo', this)">
+            💰 Fluxo de Caixa
+        </button>
+
+        <button onclick="abrirPagina('pagar', this)">
+            🧾 Contas a Pagar
+        </button>
+
+        <button onclick="abrirPagina('receber', this)">
+            💵 Contas a Receber
+        </button>
+
+        <div class="menu-title">Gestão</div>
+
+        <button onclick="abrirPagina('produtos', this)">
+            🛒 Produtos
+        </button>
+
+        <button onclick="abrirPagina('estoque', this)">
+            📦 Estoque
+        </button>
+
+        <button onclick="abrirPagina('recorrencias', this)">
+            🔄 Recorrências
+        </button>
+
+        <button onclick="abrirPagina('metas', this)">
+            🎯 Metas
+        </button>
+
+        <button onclick="abrirPagina('dre', this)">
+            📈 DRE
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- CONTEÚDO -->
+
+<main class="main">
+
+<!-- DASHBOARD -->
+
+<section id="dashboard" class="page active">
+
+<div class="header">
+
+    <div>
+        <h1>Dashboard</h1>
+        <p style="color:#777;margin-top:5px;">
+            Visão geral financeira
+        </p>
+    </div>
+
+    <div class="periodo">
+
+        <select id="anoDashboard">
+            <option>2026</option>
+            <option>2027</option>
+            <option>2028</option>
+            <option>2029</option>
+            <option>2030</option>
+        </select>
+
+        <select id="mesDashboard">
+            <option value="1">Janeiro</option>
+            <option value="2">Fevereiro</option>
+            <option value="3">Março</option>
+            <option value="4">Abril</option>
+            <option value="5">Maio</option>
+            <option value="6">Junho</option>
+            <option value="7">Julho</option>
+            <option value="8" selected>Agosto</option>
+            <option value="9">Setembro</option>
+            <option value="10">Outubro</option>
+            <option value="11">Novembro</option>
+            <option value="12">Dezembro</option>
+        </select>
+
+    </div>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+        <div class="card-title">Faturamento</div>
+        <div class="card-value entrada">R$ 0,00</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Despesas</div>
+        <div class="card-value saida">R$ 0,00</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Resultado</div>
+        <div class="card-value resultado">R$ 0,00</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Margem</div>
+        <div class="card-value">0%</div>
+    </div>
+
+</div>
+
+
+<div class="section">
+
+    <div class="section-header">
+        <h2>Resumo financeiro</h2>
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Indicador</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr>
+                    <td>Saldo disponível</td>
+                    <td>R$ 0,00</td>
+                </tr>
+
+                <tr>
+                    <td>Contas a pagar</td>
+                    <td>R$ 0,00</td>
+                </tr>
+
+                <tr>
+                    <td>Contas a receber</td>
+                    <td>R$ 0,00</td>
+                </tr>
+
+                <tr>
+                    <td>Meta de faturamento</td>
+                    <td>R$ 0,00</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- FLUXO -->
+
+<section id="fluxo" class="page">
+
+<div class="header">
+
+    <div>
+        <h1>Fluxo de Caixa</h1>
+        <p style="color:#777;margin-top:5px;">
+            Controle diário das movimentações
+        </p>
+    </div>
+
+    <div class="periodo">
+
+        <select id="anoFluxo" onchange="gerarDias()">
+            <option>2026</option>
+            <option>2027</option>
+            <option>2028</option>
+            <option>2029</option>
+            <option>2030</option>
+        </select>
+
+        <select id="mesFluxo" onchange="gerarDias()">
+            <option value="1">Janeiro</option>
+            <option value="2">Fevereiro</option>
+            <option value="3">Março</option>
+            <option value="4">Abril</option>
+            <option value="5">Maio</option>
+            <option value="6">Junho</option>
+            <option value="7">Julho</option>
+            <option value="8" selected>Agosto</option>
+            <option value="9">Setembro</option>
+            <option value="10">Outubro</option>
+            <option value="11">Novembro</option>
+            <option value="12">Dezembro</option>
+        </select>
+
+    </div>
+
+</div>
+
+
+<div class="section">
+
+    <div class="section-header">
+
+        <h2>Fluxo diário</h2>
+
+        <button class="btn" onclick="abrirModal()">
+            + Novo lançamento
+        </button>
+
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Data</th>
+                    <th>Entradas</th>
+                    <th>Saídas</th>
+                    <th>Saldo do dia</th>
+                    <th>Lançamentos</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="diasTabela"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<!-- CONTAS A PAGAR -->
+
+<section id="pagar" class="page">
+
+<div class="header">
+
+    <div>
+        <h1>Contas a Pagar</h1>
+        <p style="color:#777;margin-top:5px;">
+            Controle dos compromissos financeiros
+        </p>
+    </div>
+
+    <button class="btn" onclick="abrirModal()">
+        + Nova conta
+    </button>
+
+</div>
+
+<div class="section">
+
+<table>
+
+<thead>
+<tr>
+<th>Descrição</th>
+<th>Vencimento</th>
+<th>Valor</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td colspan="4" style="text-align:center;color:#888;">
+Nenhuma conta cadastrada.
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- CONTAS A RECEBER -->
+
+<section id="receber" class="page">
+
+<div class="header">
+
+    <div>
+        <h1>Contas a Receber</h1>
+        <p style="color:#777;margin-top:5px;">
+            Valores que a empresa tem para receber
+        </p>
+    </div>
+
+    <button class="btn" onclick="abrirModal()">
+        + Novo recebimento
+    </button>
+
+</div>
+
+<div class="section">
+
+<table>
+
+<thead>
+<tr>
+<th>Descrição</th>
+<th>Vencimento</th>
+<th>Valor</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td colspan="4" style="text-align:center;color:#888;">
+Nenhum recebimento cadastrado.
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- PRODUTOS -->
+
+<section id="produtos" class="page">
+
+<div class="header">
+
+<h1>Produtos</h1>
+
+<button class="btn">
++ Novo produto
+</button>
+
+</div>
+
+<div class="section">
+
+<table>
+
+<thead>
+<tr>
+<th>Produto</th>
+<th>Preço</th>
+<th>Custo</th>
+<th>Margem</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>Pizza Calabresa</td>
+<td>R$ 17,90</td>
+<td>R$ 0,00</td>
+<td>—</td>
+</tr>
+
+<tr>
+<td>Pizza Bacon</td>
+<td>R$ 17,90</td>
+<td>R$ 0,00</td>
+<td>—</td>
+</tr>
+
+<tr>
+<td>Pizza Mussarela</td>
+<td>R$ 17,90</td>
+<td>R$ 0,00</td>
+<td>—</td>
+</tr>
+
+<tr>
+<td>Pizza Filézinho</td>
+<td>R$ 25,00</td>
+<td>R$ 0,00</td>
+<td>—</td>
+</tr>
+
+<tr>
+<td>Alanou Cookie</td>
+<td>R$ 14,90</td>
+<td>R$ 0,00</td>
+<td>—</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- ESTOQUE -->
+
+<section id="estoque" class="page">
+
+<div class="header">
+
+<h1>Estoque Semanal</h1>
+
+<button class="btn">
++ Registrar semana
+</button>
+
+</div>
+
+<div class="section">
+
+<table>
+
+<thead>
+<tr>
+<th>Item</th>
+<th>Estoque inicial</th>
+<th>Entradas</th>
+<th>Consumo</th>
+<th>Estoque final</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td colspan="5" style="text-align:center;color:#888;">
+Nenhum estoque registrado.
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- RECORRÊNCIAS -->
+
+<section id="recorrencias" class="page">
+
+<div class="header">
+
+<h1>Recorrências</h1>
+
+<button class="btn">
++ Nova recorrência
+</button>
+
+</div>
+
+<div class="section">
+
+<table>
+
+<thead>
+<tr>
+<th>Descrição</th>
+<th>Valor</th>
+<th>Dia</th>
+<th>Frequência</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>DAS</td>
+<td>R$ 0,00</td>
+<td>20</td>
+<td>Mensal</td>
+<td>Ativa</td>
+</tr>
+
+<tr>
+<td>Energia</td>
+<td>R$ 0,00</td>
+<td>10</td>
+<td>Mensal</td>
+<td>Ativa</td>
+</tr>
+
+<tr>
+<td>Salário Funcionária</td>
+<td>R$ 0,00</td>
+<td>5</td>
+<td>Mensal</td>
+<td>Ativa</td>
+</tr>
+
+<tr>
+<td>Pró-labore</td>
+<td>R$ 0,00</td>
+<td>5</td>
+<td>Mensal</td>
+<td>Ativa</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<!-- METAS -->
+
+<section id="metas" class="page">
+
+<div class="header">
+
+<h1>Metas</h1>
+
+<button class="btn">
+Editar metas
+</button>
+
+</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="card-title">Meta de faturamento</div>
+<div class="card-value">R$ 0,00</div>
+</div>
+
+<div class="card">
+<div class="card-title">Meta de resultado</div>
+<div class="card-value">R$ 0,00</div>
+</div>
+
+<div class="card">
+<div class="card-title">Meta de despesas</div>
+<div class="card-value">R$ 0,00</div>
+</div>
+
+</div>
+
+</section>
+
+
+<!-- DRE -->
+
+<section id="dre" class="page">
+
+<div class="header">
+
+<h1>DRE</h1>
+
+<div class="periodo">
+
+<select>
+<option>2026</option>
+<option>2027</option>
+<option>2028</option>
+</select>
+
+<select>
+<option>Agosto</option>
+<option>Setembro</option>
+<option>Outubro</option>
+<option>Novembro</option>
+<option>Dezembro</option>
+</select>
+
+</div>
+
+</div>
+
+
+<div class="section">
+
+<table>
+
+<thead>
+<tr>
+<th>Resultado</th>
+<th>Valor</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>Receita</td>
+<td>R$ 0,00</td>
+</tr>
+
+<tr>
+<td>Despesas</td>
+<td>R$ 0,00</td>
+</tr>
+
+<tr>
+<td><strong>Resultado</strong></td>
+<td><strong>R$ 0,00</strong></td>
+</tr>
+
+<tr>
+<td>Margem de resultado</td>
+<td>0%</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+
+<!-- MODAL -->
+
+<div class="modal-bg" id="modal">
+
+<div class="modal">
+
+<h2>Novo lançamento</h2>
+
+<div class="form-group">
+
+<label>Tipo</label>
+
+<select id="tipoLancamento">
+
+<option value="entrada">Entrada</option>
+<option value="saida">Saída</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Descrição</label>
+
+<input
+type="text"
+id="descricao"
+placeholder="Ex.: Venda de pizza"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Data</label>
+
+<input
+type="date"
+id="dataLancamento"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Valor</label>
+
+<input
+type="number"
+id="valorLancamento"
+step="0.01"
+placeholder="0,00"
+>
+
+</div>
+
+
+<div class="form-actions">
+
+<button
+class="btn btn-secondary"
+onclick="fecharModal()"
+>
+Cancelar
+</button>
+
+<button
+class="btn"
+onclick="salvarLancamento()"
+>
+Salvar
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* ==========================
+   NAVEGAÇÃO
+========================== */
+
+function abrirPagina(id, botao) {
+
+    document.querySelectorAll('.page')
+        .forEach(p => p.classList.remove('active'));
+
+    document.getElementById(id)
+        .classList.add('active');
+
+    document.querySelectorAll('.menu button')
+        .forEach(b => b.classList.remove('active'));
+
+    botao.classList.add('active');
+
+    if(id === 'fluxo') {
+        gerarDias();
+    }
+}
+
+
+/* ==========================
+   DIAS DO MÊS
+========================== */
+
+function gerarDias() {
+
+    const ano =
+        parseInt(document.getElementById('anoFluxo').value);
+
+    const mes =
+        parseInt(document.getElementById('mesFluxo').value);
+
+    const quantidadeDias =
+        new Date(ano, mes, 0).getDate();
+
+    const tabela =
+        document.getElementById('diasTabela');
+
+    tabela.innerHTML = '';
+
+    for(let dia = 1; dia <= quantidadeDias; dia++) {
+
+        const data =
+            String(dia).padStart(2, '0')
+            + '/'
+            + String(mes).padStart(2, '0')
+            + '/'
+            + ano;
+
+        tabela.innerHTML += `
+
+        <tr>
+
+            <td>${data}</td>
+
+            <td class="entrada">
+                R$ 0,00
+            </td>
+
+            <td class="saida">
+                R$ 0,00
+            </td>
+
+            <td>
+                R$ 0,00
+            </td>
+
+            <td>
+                0
+            </td>
+
+        </tr>
+
+        `;
+    }
+}
+
+
+/* ==========================
+   MODAL
+========================== */
+
+function abrirModal() {
+
+    document.getElementById('modal').style.display = 'flex';
+
+}
+
+
+function fecharModal() {
+
+    document.getElementById('modal').style.display = 'none';
+
+}
+
+
+/* ==========================
+   SALVAR LANÇAMENTO
+========================== */
+
+function salvarLancamento() {
+
+    const tipo =
+        document.getElementById('tipoLancamento').value;
+
+    const descricao =
+        document.getElementById('descricao').value;
+
+    const data =
+        document.getElementById('dataLancamento').value;
+
+    const valor =
+        document.getElementById('valorLancamento').value;
+
+    if(!descricao || !data || !valor) {
+
+        alert('Preencha todos os campos.');
+
+        return;
+
+    }
+
+    alert(
+        'Lançamento registrado com sucesso!'
+    );
+
+    fecharModal();
+
+}
+
+
+/* ==========================
+   INICIAR
+========================== */
+
+gerarDias();
+
+</script>
+
+</body>
+</html>
