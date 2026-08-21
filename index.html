@@ -1201,15 +1201,34 @@ async function carregarFluxo() {
 
 /* MODAL */
 
-function abrirModalLancamento() {
+async function abrirModalLancamento() {
 
     if (!empresaAtual) {
 
-        alert(
-            'Selecione uma empresa primeiro.'
-        );
+        const {
+            data: { user }
+        } = await supabaseClient.auth.getUser();
 
-        return;
+        if (!user) {
+            alert('Usuário não autenticado.');
+            return;
+        }
+
+        const { data: vinculo, error } =
+            await supabaseClient
+                .from('cliente_usuarios')
+                .select('cliente_id')
+                .eq('usuario_id', user.id)
+                .limit(1)
+                .single();
+
+        if (error || !vinculo) {
+            alert('Não foi possível identificar a empresa.');
+            console.error(error);
+            return;
+        }
+
+        empresaAtual = vinculo.cliente_id;
     }
 
 
@@ -1225,13 +1244,13 @@ function abrirModalLancamento() {
         'lancData'
     ).value = hoje;
 
-    document.getElementById('lancProduto').value = '';
+    document.getElementById('lancTipo').value = 'entrada';
     document.getElementById('lancQuantidade').value = 1;
     document.getElementById('lancDescricao').value = '';
     document.getElementById('lancValor').value = '';
 
-    carregarContasLancamento();
-    carregarProdutosLancamento();
+    await carregarProdutosLancamento();
+    await carregarContasLancamento();
 }
 
 
@@ -1244,67 +1263,163 @@ function fecharModalLancamento() {
 }
 
 
-/* CONTAS DO LANÇAMENTO */
+/* PRODUTOS DO LANÇAMENTO */
 async function carregarProdutosLancamento() {
-    const { data, error } = await supabaseClient
-        .from('produtos')
-        .select('id, nome, preco_venda')
-        .eq('cliente_id', empresaAtual)
-        .eq('ativo', true)
-        .order('nome');
-
-    if (error) {
-        console.error(error);
-        alert('Não foi possível carregar os produtos.');
-        return;
-    }
 
     const select = document.getElementById('lancProduto');
 
-    if (!select) return;
+    if (!select) {
+        console.error('Campo lancProduto não encontrado no HTML.');
+        return;
+    }
 
-    select.innerHTML = '<option value="">Selecionar produto</option>';
+    select.innerHTML = '<option value="">Carregando produtos...</option>';
+    select.disabled = true;
 
-    (data || []).forEach(produto => {
-        const option = document.createElement('option');
+    /*
+     * IMPORTANTE:
+     * Se o usuário já escolheu uma empresa no seletor superior,
+     * usamos essa empresa. A versão anterior sobrescrevia empresaAtual
+     * com o primeiro vínculo encontrado em cliente_usuarios, o que podia
+     * carregar os produtos de outra empresa.
+     */
+    let clienteId = empresaAtual;
+
+    if (!clienteId) {
+
+        const {
+            data: { user },
+            error: userError
+        } = await supabaseClient.auth.getUser();
+
+        if (userError || !user) {
+            console.error('Usuário não autenticado:', userError);
+            select.innerHTML =
+                '<option value="">Usuário não autenticado</option>';
+            select.disabled = false;
+            return;
+        }
+
+        const { data: vinculo, error: vinculoError } =
+            await supabaseClient
+                .from('cliente_usuarios')
+                .select('cliente_id')
+                .eq('usuario_id', user.id)
+                .limit(1)
+                .maybeSingle();
+
+        if (vinculoError || !vinculo) {
+            console.error(
+                'Vínculo empresa/usuário não encontrado:',
+                vinculoError
+            );
+            select.innerHTML =
+                '<option value="">Empresa não encontrada</option>';
+            select.disabled = false;
+            return;
+        }
+
+        clienteId = vinculo.cliente_id;
+        empresaAtual = clienteId;
+    }
+
+    console.log('Carregando produtos para cliente:', clienteId);
+
+    const { data: produtos, error: produtosError } =
+        await supabaseClient
+            .from('produtos')
+            .select('id, nome, preco_venda')
+            .eq('cliente_id', clienteId)
+            .eq('ativo', true)
+            .order('nome', { ascending: true });
+
+    if (produtosError) {
+
+        console.error(
+            'ERRO SUPABASE AO CARREGAR PRODUTOS:',
+            produtosError
+        );
+
+        select.innerHTML =
+            '<option value="">Erro ao carregar produtos</option>';
+
+        select.disabled = false;
+
+        alert(
+            'Não foi possível carregar os produtos. ' +
+            'Abra o console (F12) para ver o erro do Supabase.'
+        );
+
+        return;
+    }
+
+    if (!produtos || produtos.length === 0) {
+
+        console.warn(
+            'Nenhum produto encontrado para o cliente:',
+            clienteId
+        );
+
+        select.innerHTML =
+            '<option value="">Nenhum produto cadastrado</option>';
+
+        select.disabled = false;
+
+        return;
+    }
+
+    select.innerHTML =
+        '<option value="">Selecionar produto</option>';
+
+    produtos.forEach(produto => {
+
+        const option =
+            document.createElement('option');
 
         option.value = produto.id;
-        option.textContent = produto.nome;
+
+        option.textContent =
+            `${produto.nome} — ${dinheiro(produto.preco_venda)}`;
+
+        option.dataset.preco =
+            produto.preco_venda;
+
+        option.dataset.nome =
+            produto.nome;
 
         select.appendChild(option);
-       });
-}
-/* PREENCHER DADOS DO PRODUTO */
+    });
 
-async function preencherDadosProduto() {
-    
-    const produtoId = document.getElementById('lancProduto').value;
+    select.disabled = false;
+
+    console.log(
+        `Produtos carregados com sucesso: ${produtos.length}`,
+        'Cliente:',
+        clienteId
+    );
+}
+
+/* PREENCHER DADOS DO PRODUTO */
+function preencherDadosProduto() {
+
+    const select = document.getElementById('lancProduto');
+    const option = select.options[select.selectedIndex];
+
     const quantidade = Number(
         document.getElementById('lancQuantidade').value
     ) || 1;
 
-    if (!produtoId) {
+    if (!select.value || !option || !option.dataset.preco) {
         document.getElementById('lancDescricao').value = '';
         document.getElementById('lancValor').value = '';
         return;
     }
 
-    const { data: produto, error } = await supabaseClient
-        .from('produtos')
-        .select('id, nome, preco_venda')
-        .eq('id', produtoId)
-        .single();
-
-    if (error || !produto) {
-        console.error(error);
-        return;
-    }
-
     document.getElementById('lancDescricao').value =
-        produto.nome;
+        option.dataset.nome;
 
     const valorTotal =
-        Number(produto.preco_venda) * quantidade;
+        Number(option.dataset.preco) * quantidade;
 
     document.getElementById('lancValor').value =
         valorTotal.toFixed(2);
