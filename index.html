@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fluxo de Caixa</title>
+<title>Fluxo+</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 * {
@@ -14,9 +16,9 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background: #f5f6f8;
-    color: #222;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f6f7f9;
+    color: #202124;
 }
 
 .app {
@@ -24,173 +26,166 @@ body {
     min-height: 100vh;
 }
 
-/* MENU */
-
+/* SIDEBAR */
 .sidebar {
-    width: 240px;
+    width: 250px;
     background: #ffffff;
     border-right: 1px solid #e5e7eb;
-    padding: 24px 16px;
+    padding: 24px 18px;
     position: fixed;
-    height: 100vh;
+    left: 0;
+    top: 0;
+    bottom: 0;
 }
 
 .logo {
-    font-size: 21px;
-    font-weight: bold;
+    font-size: 25px;
+    font-weight: 700;
     margin-bottom: 35px;
 }
 
-.logo span {
-    color: #2563eb;
-}
-
-.menu-title {
-    font-size: 11px;
-    color: #8b8f98;
-    margin: 20px 10px 8px;
-    text-transform: uppercase;
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
 }
 
 .menu button {
-    width: 100%;
     border: none;
     background: transparent;
+    padding: 13px 14px;
     text-align: left;
-    padding: 12px 14px;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-size: 15px;
     cursor: pointer;
-    font-size: 14px;
-    margin-bottom: 3px;
+    color: #333;
 }
 
-.menu button:hover,
+.menu button:hover {
+    background: #f1f4ff;
+}
+
 .menu button.active {
     background: #eef2ff;
     color: #2563eb;
+    font-weight: 600;
 }
 
-/* CONTEÚDO */
+.section-title {
+    font-size: 12px;
+    color: #9ca3af;
+    margin: 24px 12px 8px;
+    text-transform: uppercase;
+}
 
+/* MAIN */
 .main {
-    margin-left: 240px;
-    width: calc(100% - 240px);
-    padding: 30px;
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    padding: 35px;
 }
 
-.header {
+.topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 28px;
 }
 
-.header h1 {
-    font-size: 28px;
+.topbar h1 {
+    font-size: 30px;
 }
 
-.periodo {
+.topbar p {
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+.selects {
     display: flex;
     gap: 10px;
 }
 
 select,
-input,
-button {
-    font-family: inherit;
-}
-
-select,
 input {
     border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: 9px;
+    padding: 11px 14px;
     background: white;
+    font-size: 14px;
 }
 
 /* CARDS */
-
 .cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 18px;
     margin-bottom: 25px;
 }
 
 .card {
     background: white;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #e7e7e7;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 22px;
 }
 
 .card-title {
-    font-size: 13px;
     color: #777;
-    margin-bottom: 10px;
+    font-size: 14px;
+    margin-bottom: 12px;
 }
 
 .card-value {
-    font-size: 25px;
-    font-weight: bold;
+    font-size: 27px;
+    font-weight: 700;
 }
 
-.entrada {
-    color: #16803c;
+.green {
+    color: #138a4b;
 }
 
-.saida {
-    color: #c0392b;
+.red {
+    color: #d93025;
 }
 
-.resultado {
+.blue {
     color: #2563eb;
 }
 
-/* SEÇÕES */
-
-.section {
+/* CONTENT */
+.panel {
     background: white;
-    border: 1px solid #e7e7e7;
-    border-radius: 12px;
-    margin-bottom: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
     overflow: hidden;
+    margin-bottom: 25px;
 }
 
-.section-header {
-    padding: 18px 20px;
+.panel-header {
+    padding: 20px 22px;
     border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.section-header h2 {
-    font-size: 17px;
+.panel-header h2 {
+    font-size: 20px;
 }
 
 .btn {
-    border: none;
     background: #2563eb;
     color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 9px;
     cursor: pointer;
+    font-weight: 600;
 }
 
 .btn:hover {
-    opacity: .9;
-}
-
-.btn-secondary {
-    background: #f1f3f5;
-    color: #333;
-}
-
-/* TABELAS */
-
-.table-wrapper {
-    overflow-x: auto;
+    background: #1d4ed8;
 }
 
 table {
@@ -200,39 +195,37 @@ table {
 
 th,
 td {
-    padding: 13px 18px;
-    border-bottom: 1px solid #eee;
+    padding: 15px 20px;
     text-align: left;
-    font-size: 14px;
+    border-bottom: 1px solid #eee;
 }
 
 th {
-    color: #777;
-    font-size: 12px;
+    font-size: 13px;
+    color: #6b7280;
     background: #fafafa;
 }
 
-tr:last-child td {
-    border-bottom: none;
+td {
+    font-size: 14px;
 }
 
 /* MODAL */
-
 .modal-bg {
-    display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.45);
+    background: rgba(0,0,0,.35);
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 100;
 }
 
 .modal {
-    background: white;
     width: 500px;
     max-width: 92%;
-    border-radius: 14px;
+    background: white;
+    border-radius: 15px;
     padding: 25px;
 }
 
@@ -256,34 +249,33 @@ tr:last-child td {
     width: 100%;
 }
 
-.form-actions {
+.modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
 }
 
-/* PÁGINAS */
-
-.page {
-    display: none;
+.btn-secondary {
+    background: #eee;
+    color: #333;
 }
 
-.page.active {
-    display: block;
+.hidden {
+    display: none !important;
 }
 
 /* RESPONSIVO */
-
 @media(max-width: 900px) {
 
     .sidebar {
-        width: 190px;
+        width: 210px;
     }
 
     .main {
-        margin-left: 190px;
-        width: calc(100% - 190px);
+        margin-left: 210px;
+        width: calc(100% - 210px);
+        padding: 20px;
     }
 
     .cards {
@@ -294,31 +286,23 @@ tr:last-child td {
 @media(max-width: 650px) {
 
     .sidebar {
-        position: relative;
-        width: 100%;
-        height: auto;
-    }
-
-    .app {
-        display: block;
+        display: none;
     }
 
     .main {
         margin-left: 0;
         width: 100%;
-        padding: 18px;
+        padding: 15px;
     }
 
     .cards {
         grid-template-columns: 1fr;
     }
 
-    .header {
-        display: block;
-    }
-
-    .periodo {
-        margin-top: 15px;
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
     }
 }
 </style>
@@ -328,886 +312,1207 @@ tr:last-child td {
 
 <div class="app">
 
-<!-- MENU LATERAL -->
+    <aside class="sidebar">
 
-<aside class="sidebar">
+        <div class="logo">Fluxo<span style="color:#2563eb">+</span></div>
 
-    <div class="logo">
-        Fluxo<span>+</span>
+        <div class="menu">
+
+            <button class="active" onclick="abrirPagina('dashboard', this)">
+                🏠 Dashboard
+            </button>
+
+            <button onclick="abrirPagina('fluxo', this)">
+                💰 Fluxo de Caixa
+            </button>
+
+            <button onclick="abrirPagina('pagar', this)">
+                🧾 Contas a Pagar
+            </button>
+
+            <button onclick="abrirPagina('receber', this)">
+                💵 Contas a Receber
+            </button>
+
+            <div class="section-title">Gestão</div>
+
+            <button onclick="abrirPagina('produtos', this)">
+                🛒 Produtos
+            </button>
+
+            <button onclick="abrirPagina('estoque', this)">
+                📦 Estoque
+            </button>
+
+            <button onclick="abrirPagina('recorrencias', this)">
+                🔄 Recorrências
+            </button>
+
+            <button onclick="abrirPagina('metas', this)">
+                🎯 Metas
+            </button>
+
+            <button onclick="abrirPagina('dre', this)">
+                📊 DRE
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        <div class="topbar">
+
+            <div>
+                <h1 id="tituloPagina">Dashboard</h1>
+                <p id="subtituloPagina">Visão geral financeira</p>
+            </div>
+
+            <div class="selects">
+
+                <select id="empresaSelect" onchange="trocarEmpresa()">
+                    <option value="">Selecionar empresa</option>
+                </select>
+
+                <select id="anoSelect">
+                    <option>2026</option>
+                    <option>2027</option>
+                    <option>2028</option>
+                </select>
+
+                <select id="mesSelect">
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8" selected>Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <section id="pagina-dashboard">
+
+            <div class="cards">
+
+                <div class="card">
+                    <div class="card-title">Faturamento</div>
+                    <div class="card-value green" id="faturamento">R$ 0,00</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Despesas</div>
+                    <div class="card-value red" id="despesas">R$ 0,00</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Resultado</div>
+                    <div class="card-value blue" id="resultado">R$ 0,00</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Margem</div>
+                    <div class="card-value" id="margem">0%</div>
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>Resumo financeiro</h2>
+                </div>
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Indicador</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td>Saldo disponível</td>
+                            <td id="saldo">R$ 0,00</td>
+                        </tr>
+
+                        <tr>
+                            <td>Contas a pagar</td>
+                            <td id="totalPagar">R$ 0,00</td>
+                        </tr>
+
+                        <tr>
+                            <td>Contas a receber</td>
+                            <td id="totalReceber">R$ 0,00</td>
+                        </tr>
+
+                        <tr>
+                            <td>Meta de faturamento</td>
+                            <td id="metaFaturamento">R$ 0,00</td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <section id="pagina-fluxo" class="hidden">
+
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <h2>Fluxo de Caixa</h2>
+
+                    <button class="btn" onclick="abrirModalLancamento()">
+                        + Novo lançamento
+                    </button>
+
+                </div>
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Entradas</th>
+                            <th>Saídas</th>
+                            <th>Saldo do dia</th>
+                            <th>Lançamentos</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="fluxoTabela"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <section id="pagina-pagar" class="hidden">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Contas a Pagar</h2>
+                    <button class="btn">+ Nova conta</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pagarTabela"></tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section id="pagina-receber" class="hidden">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Contas a Receber</h2>
+                    <button class="btn">+ Nova conta</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receberTabela"></tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section id="pagina-produtos" class="hidden">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Produtos</h2>
+                    <button class="btn">+ Novo produto</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Preço de venda</th>
+                            <th>Custo</th>
+                            <th>Margem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="produtosTabela"></tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section id="pagina-estoque" class="hidden">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Estoque semanal</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Estoque inicial</th>
+                            <th>Entradas</th>
+                            <th>Consumo</th>
+                            <th>Estoque final</th>
+                        </tr>
+                    </thead>
+                    <tbody id="estoqueTabela"></tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section id="pagina-recorrencias" class="hidden">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Recorrências</h2>
+                    <button class="btn">+ Nova recorrência</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Descrição</th>
+                            <th>Tipo</th>
+                            <th>Valor</th>
+                            <th>Vencimento</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recorrenciasTabela"></tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section id="pagina-metas" class="hidden">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Metas</h2>
+                    <button class="btn">+ Editar metas</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th>Faturamento</th>
+                            <th>Resultado</th>
+                            <th>Despesas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metasTabela"></tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section id="pagina-dre" class="hidden">
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h2>DRE Simplificada</h2>
+                </div>
+
+                <table>
+
+                    <tbody>
+
+                        <tr>
+                            <td>Receita bruta</td>
+                            <td id="dreReceita">R$ 0,00</td>
+                        </tr>
+
+                        <tr>
+                            <td>Despesas</td>
+                            <td id="dreDespesas">R$ 0,00</td>
+                        </tr>
+
+                        <tr>
+                            <td><strong>Resultado</strong></td>
+                            <td id="dreResultado"><strong>R$ 0,00</strong></td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- MODAL LANÇAMENTO -->
+
+<div class="modal-bg" id="modalLancamento">
+
+    <div class="modal">
+
+        <h2>Novo lançamento</h2>
+
+        <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="lancData">
+        </div>
+
+        <div class="form-group">
+            <label>Tipo</label>
+
+            <select id="lancTipo">
+                <option value="entrada">Entrada</option>
+                <option value="saida">Saída</option>
+            </select>
+
+        </div>
+
+        <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" id="lancDescricao" placeholder="Ex.: Venda de pizza">
+        </div>
+
+        <div class="form-group">
+            <label>Valor</label>
+            <input type="number" step="0.01" id="lancValor" placeholder="0,00">
+        </div>
+
+        <div class="form-group">
+            <label>Conta</label>
+            <select id="lancConta"></select>
+        </div>
+
+        <div class="modal-actions">
+
+            <button class="btn btn-secondary" onclick="fecharModalLancamento()">
+                Cancelar
+            </button>
+
+            <button class="btn" onclick="salvarLancamento()">
+                Salvar lançamento
+            </button>
+
+        </div>
+
     </div>
-
-    <div class="menu">
-
-        <button class="active" onclick="abrirPagina('dashboard', this)">
-            🏠 Dashboard
-        </button>
-
-        <button onclick="abrirPagina('fluxo', this)">
-            💰 Fluxo de Caixa
-        </button>
-
-        <button onclick="abrirPagina('pagar', this)">
-            🧾 Contas a Pagar
-        </button>
-
-        <button onclick="abrirPagina('receber', this)">
-            💵 Contas a Receber
-        </button>
-
-        <div class="menu-title">Gestão</div>
-
-        <button onclick="abrirPagina('produtos', this)">
-            🛒 Produtos
-        </button>
-
-        <button onclick="abrirPagina('estoque', this)">
-            📦 Estoque
-        </button>
-
-        <button onclick="abrirPagina('recorrencias', this)">
-            🔄 Recorrências
-        </button>
-
-        <button onclick="abrirPagina('metas', this)">
-            🎯 Metas
-        </button>
-
-        <button onclick="abrirPagina('dre', this)">
-            📈 DRE
-        </button>
-
-    </div>
-
-</aside>
-
-
-<!-- CONTEÚDO -->
-
-<main class="main">
-
-<!-- DASHBOARD -->
-
-<section id="dashboard" class="page active">
-
-<div class="header">
-
-    <div>
-        <h1>Dashboard</h1>
-        <p style="color:#777;margin-top:5px;">
-            Visão geral financeira
-        </p>
-    </div>
-
-    <div class="periodo">
-
-        <select id="anoDashboard">
-            <option>2026</option>
-            <option>2027</option>
-            <option>2028</option>
-            <option>2029</option>
-            <option>2030</option>
-        </select>
-
-        <select id="mesDashboard">
-            <option value="1">Janeiro</option>
-            <option value="2">Fevereiro</option>
-            <option value="3">Março</option>
-            <option value="4">Abril</option>
-            <option value="5">Maio</option>
-            <option value="6">Junho</option>
-            <option value="7">Julho</option>
-            <option value="8" selected>Agosto</option>
-            <option value="9">Setembro</option>
-            <option value="10">Outubro</option>
-            <option value="11">Novembro</option>
-            <option value="12">Dezembro</option>
-        </select>
-
-    </div>
-
-</div>
-
-
-<div class="cards">
-
-    <div class="card">
-        <div class="card-title">Faturamento</div>
-        <div class="card-value entrada">R$ 0,00</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Despesas</div>
-        <div class="card-value saida">R$ 0,00</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Resultado</div>
-        <div class="card-value resultado">R$ 0,00</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Margem</div>
-        <div class="card-value">0%</div>
-    </div>
-
-</div>
-
-
-<div class="section">
-
-    <div class="section-header">
-        <h2>Resumo financeiro</h2>
-    </div>
-
-    <div class="table-wrapper">
-
-        <table>
-
-            <thead>
-                <tr>
-                    <th>Indicador</th>
-                    <th>Valor</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                <tr>
-                    <td>Saldo disponível</td>
-                    <td>R$ 0,00</td>
-                </tr>
-
-                <tr>
-                    <td>Contas a pagar</td>
-                    <td>R$ 0,00</td>
-                </tr>
-
-                <tr>
-                    <td>Contas a receber</td>
-                    <td>R$ 0,00</td>
-                </tr>
-
-                <tr>
-                    <td>Meta de faturamento</td>
-                    <td>R$ 0,00</td>
-                </tr>
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-</section>
-
-
-<!-- FLUXO -->
-
-<section id="fluxo" class="page">
-
-<div class="header">
-
-    <div>
-        <h1>Fluxo de Caixa</h1>
-        <p style="color:#777;margin-top:5px;">
-            Controle diário das movimentações
-        </p>
-    </div>
-
-    <div class="periodo">
-
-        <select id="anoFluxo" onchange="gerarDias()">
-            <option>2026</option>
-            <option>2027</option>
-            <option>2028</option>
-            <option>2029</option>
-            <option>2030</option>
-        </select>
-
-        <select id="mesFluxo" onchange="gerarDias()">
-            <option value="1">Janeiro</option>
-            <option value="2">Fevereiro</option>
-            <option value="3">Março</option>
-            <option value="4">Abril</option>
-            <option value="5">Maio</option>
-            <option value="6">Junho</option>
-            <option value="7">Julho</option>
-            <option value="8" selected>Agosto</option>
-            <option value="9">Setembro</option>
-            <option value="10">Outubro</option>
-            <option value="11">Novembro</option>
-            <option value="12">Dezembro</option>
-        </select>
-
-    </div>
-
-</div>
-
-
-<div class="section">
-
-    <div class="section-header">
-
-        <h2>Fluxo diário</h2>
-
-        <button class="btn" onclick="abrirModal()">
-            + Novo lançamento
-        </button>
-
-    </div>
-
-    <div class="table-wrapper">
-
-        <table>
-
-            <thead>
-
-                <tr>
-                    <th>Data</th>
-                    <th>Entradas</th>
-                    <th>Saídas</th>
-                    <th>Saldo do dia</th>
-                    <th>Lançamentos</th>
-                </tr>
-
-            </thead>
-
-            <tbody id="diasTabela"></tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
-</section>
-
-
-<!-- CONTAS A PAGAR -->
-
-<section id="pagar" class="page">
-
-<div class="header">
-
-    <div>
-        <h1>Contas a Pagar</h1>
-        <p style="color:#777;margin-top:5px;">
-            Controle dos compromissos financeiros
-        </p>
-    </div>
-
-    <button class="btn" onclick="abrirModal()">
-        + Nova conta
-    </button>
-
-</div>
-
-<div class="section">
-
-<table>
-
-<thead>
-<tr>
-<th>Descrição</th>
-<th>Vencimento</th>
-<th>Valor</th>
-<th>Status</th>
-</tr>
-</thead>
-
-<tbody>
-
-<tr>
-<td colspan="4" style="text-align:center;color:#888;">
-Nenhuma conta cadastrada.
-</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-
-<!-- CONTAS A RECEBER -->
-
-<section id="receber" class="page">
-
-<div class="header">
-
-    <div>
-        <h1>Contas a Receber</h1>
-        <p style="color:#777;margin-top:5px;">
-            Valores que a empresa tem para receber
-        </p>
-    </div>
-
-    <button class="btn" onclick="abrirModal()">
-        + Novo recebimento
-    </button>
-
-</div>
-
-<div class="section">
-
-<table>
-
-<thead>
-<tr>
-<th>Descrição</th>
-<th>Vencimento</th>
-<th>Valor</th>
-<th>Status</th>
-</tr>
-</thead>
-
-<tbody>
-
-<tr>
-<td colspan="4" style="text-align:center;color:#888;">
-Nenhum recebimento cadastrado.
-</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-
-<!-- PRODUTOS -->
-
-<section id="produtos" class="page">
-
-<div class="header">
-
-<h1>Produtos</h1>
-
-<button class="btn">
-+ Novo produto
-</button>
-
-</div>
-
-<div class="section">
-
-<table>
-
-<thead>
-<tr>
-<th>Produto</th>
-<th>Preço</th>
-<th>Custo</th>
-<th>Margem</th>
-</tr>
-</thead>
-
-<tbody>
-
-<tr>
-<td>Pizza Calabresa</td>
-<td>R$ 17,90</td>
-<td>R$ 0,00</td>
-<td>—</td>
-</tr>
-
-<tr>
-<td>Pizza Bacon</td>
-<td>R$ 17,90</td>
-<td>R$ 0,00</td>
-<td>—</td>
-</tr>
-
-<tr>
-<td>Pizza Mussarela</td>
-<td>R$ 17,90</td>
-<td>R$ 0,00</td>
-<td>—</td>
-</tr>
-
-<tr>
-<td>Pizza Filézinho</td>
-<td>R$ 25,00</td>
-<td>R$ 0,00</td>
-<td>—</td>
-</tr>
-
-<tr>
-<td>Alanou Cookie</td>
-<td>R$ 14,90</td>
-<td>R$ 0,00</td>
-<td>—</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-
-<!-- ESTOQUE -->
-
-<section id="estoque" class="page">
-
-<div class="header">
-
-<h1>Estoque Semanal</h1>
-
-<button class="btn">
-+ Registrar semana
-</button>
-
-</div>
-
-<div class="section">
-
-<table>
-
-<thead>
-<tr>
-<th>Item</th>
-<th>Estoque inicial</th>
-<th>Entradas</th>
-<th>Consumo</th>
-<th>Estoque final</th>
-</tr>
-</thead>
-
-<tbody>
-
-<tr>
-<td colspan="5" style="text-align:center;color:#888;">
-Nenhum estoque registrado.
-</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-
-<!-- RECORRÊNCIAS -->
-
-<section id="recorrencias" class="page">
-
-<div class="header">
-
-<h1>Recorrências</h1>
-
-<button class="btn">
-+ Nova recorrência
-</button>
-
-</div>
-
-<div class="section">
-
-<table>
-
-<thead>
-<tr>
-<th>Descrição</th>
-<th>Valor</th>
-<th>Dia</th>
-<th>Frequência</th>
-<th>Status</th>
-</tr>
-</thead>
-
-<tbody>
-
-<tr>
-<td>DAS</td>
-<td>R$ 0,00</td>
-<td>20</td>
-<td>Mensal</td>
-<td>Ativa</td>
-</tr>
-
-<tr>
-<td>Energia</td>
-<td>R$ 0,00</td>
-<td>10</td>
-<td>Mensal</td>
-<td>Ativa</td>
-</tr>
-
-<tr>
-<td>Salário Funcionária</td>
-<td>R$ 0,00</td>
-<td>5</td>
-<td>Mensal</td>
-<td>Ativa</td>
-</tr>
-
-<tr>
-<td>Pró-labore</td>
-<td>R$ 0,00</td>
-<td>5</td>
-<td>Mensal</td>
-<td>Ativa</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-
-<!-- METAS -->
-
-<section id="metas" class="page">
-
-<div class="header">
-
-<h1>Metas</h1>
-
-<button class="btn">
-Editar metas
-</button>
-
-</div>
-
-<div class="cards">
-
-<div class="card">
-<div class="card-title">Meta de faturamento</div>
-<div class="card-value">R$ 0,00</div>
-</div>
-
-<div class="card">
-<div class="card-title">Meta de resultado</div>
-<div class="card-value">R$ 0,00</div>
-</div>
-
-<div class="card">
-<div class="card-title">Meta de despesas</div>
-<div class="card-value">R$ 0,00</div>
-</div>
-
-</div>
-
-</section>
-
-
-<!-- DRE -->
-
-<section id="dre" class="page">
-
-<div class="header">
-
-<h1>DRE</h1>
-
-<div class="periodo">
-
-<select>
-<option>2026</option>
-<option>2027</option>
-<option>2028</option>
-</select>
-
-<select>
-<option>Agosto</option>
-<option>Setembro</option>
-<option>Outubro</option>
-<option>Novembro</option>
-<option>Dezembro</option>
-</select>
-
-</div>
-
-</div>
-
-
-<div class="section">
-
-<table>
-
-<thead>
-<tr>
-<th>Resultado</th>
-<th>Valor</th>
-</tr>
-</thead>
-
-<tbody>
-
-<tr>
-<td>Receita</td>
-<td>R$ 0,00</td>
-</tr>
-
-<tr>
-<td>Despesas</td>
-<td>R$ 0,00</td>
-</tr>
-
-<tr>
-<td><strong>Resultado</strong></td>
-<td><strong>R$ 0,00</strong></td>
-</tr>
-
-<tr>
-<td>Margem de resultado</td>
-<td>0%</td>
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</section>
-
-</main>
-
-</div>
-
-
-<!-- MODAL -->
-
-<div class="modal-bg" id="modal">
-
-<div class="modal">
-
-<h2>Novo lançamento</h2>
-
-<div class="form-group">
-
-<label>Tipo</label>
-
-<select id="tipoLancamento">
-
-<option value="entrada">Entrada</option>
-<option value="saida">Saída</option>
-
-</select>
-
-</div>
-
-
-<div class="form-group">
-
-<label>Descrição</label>
-
-<input
-type="text"
-id="descricao"
-placeholder="Ex.: Venda de pizza"
->
-
-</div>
-
-
-<div class="form-group">
-
-<label>Data</label>
-
-<input
-type="date"
-id="dataLancamento"
->
-
-</div>
-
-
-<div class="form-group">
-
-<label>Valor</label>
-
-<input
-type="number"
-id="valorLancamento"
-step="0.01"
-placeholder="0,00"
->
-
-</div>
-
-
-<div class="form-actions">
-
-<button
-class="btn btn-secondary"
-onclick="fecharModal()"
->
-Cancelar
-</button>
-
-<button
-class="btn"
-onclick="salvarLancamento()"
->
-Salvar
-</button>
-
-</div>
-
-</div>
 
 </div>
 
 
 <script>
 
-/* ==========================
-   NAVEGAÇÃO
-========================== */
+const SUPABASE_URL =
+    'https://xqqjuermtmqukpwvapwl.supabase.co';
 
-function abrirPagina(id, botao) {
+const SUPABASE_KEY =
+    'sb_publishable_-pLIM7IhCTZ9qCKoc5-eGw_68465eaf';
 
-    document.querySelectorAll('.page')
-        .forEach(p => p.classList.remove('active'));
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
 
-    document.getElementById(id)
-        .classList.add('active');
 
-    document.querySelectorAll('.menu button')
-        .forEach(b => b.classList.remove('active'));
+let empresaAtual = null;
+
+
+/* FORMATAR DINHEIRO */
+
+function dinheiro(valor) {
+
+    return Number(valor || 0).toLocaleString(
+        'pt-BR',
+        {
+            style: 'currency',
+            currency: 'BRL'
+        }
+    );
+
+}
+
+
+/* EMPRESAS */
+
+async function carregarEmpresas() {
+
+    const { data, error } =
+        await supabaseClient
+            .from('clientes')
+            .select('id,nome')
+            .eq('ativo', true)
+            .order('nome');
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            'Não foi possível carregar as empresas.'
+        );
+
+        return;
+    }
+
+    const select =
+        document.getElementById('empresaSelect');
+
+    select.innerHTML =
+        '<option value="">Selecionar empresa</option>';
+
+    data.forEach(empresa => {
+
+        const option =
+            document.createElement('option');
+
+        option.value = empresa.id;
+        option.textContent = empresa.nome;
+
+        select.appendChild(option);
+
+    });
+
+}
+
+
+/* TROCAR EMPRESA */
+
+async function trocarEmpresa() {
+
+    const id =
+        document.getElementById('empresaSelect').value;
+
+    empresaAtual = id || null;
+
+    if (!empresaAtual) return;
+
+    await carregarDashboard();
+    await carregarFluxo();
+
+}
+
+
+/* NAVEGAÇÃO */
+
+function abrirPagina(pagina, botao) {
+
+    document
+        .querySelectorAll('main section')
+        .forEach(section => {
+            section.classList.add('hidden');
+        });
+
+    const section =
+        document.getElementById(
+            'pagina-' + pagina
+        );
+
+    if (section)
+        section.classList.remove('hidden');
+
+
+    document
+        .querySelectorAll('.menu button')
+        .forEach(btn => {
+            btn.classList.remove('active');
+        });
 
     botao.classList.add('active');
 
-    if(id === 'fluxo') {
-        gerarDias();
-    }
+
+    const nomes = {
+
+        dashboard: [
+            'Dashboard',
+            'Visão geral financeira'
+        ],
+
+        fluxo: [
+            'Fluxo de Caixa',
+            'Controle diário das movimentações'
+        ],
+
+        pagar: [
+            'Contas a Pagar',
+            'Controle das obrigações'
+        ],
+
+        receber: [
+            'Contas a Receber',
+            'Valores que a empresa tem para receber'
+        ],
+
+        produtos: [
+            'Produtos',
+            'Cadastro e acompanhamento'
+        ],
+
+        estoque: [
+            'Estoque',
+            'Controle semanal'
+        ],
+
+        recorrencias: [
+            'Recorrências',
+            'Despesas recorrentes'
+        ],
+
+        metas: [
+            'Metas',
+            'Objetivos financeiros'
+        ],
+
+        dre: [
+            'DRE',
+            'Demonstrativo de Resultado'
+        ]
+
+    };
+
+    document.getElementById(
+        'tituloPagina'
+    ).textContent = nomes[pagina][0];
+
+    document.getElementById(
+        'subtituloPagina'
+    ).textContent = nomes[pagina][1];
+
 }
 
 
-/* ==========================
-   DIAS DO MÊS
-========================== */
+/* DASHBOARD */
 
-function gerarDias() {
+async function carregarDashboard() {
+
+    if (!empresaAtual) return;
+
 
     const ano =
-        parseInt(document.getElementById('anoFluxo').value);
+        Number(
+            document.getElementById('anoSelect').value
+        );
 
     const mes =
-        parseInt(document.getElementById('mesFluxo').value);
+        Number(
+            document.getElementById('mesSelect').value
+        );
 
-    const quantidadeDias =
-        new Date(ano, mes, 0).getDate();
+
+    const primeiroDia =
+        `${ano}-${String(mes).padStart(2,'0')}-01`;
+
+    const ultimoDia =
+        new Date(
+            ano,
+            mes,
+            0
+        ).toISOString().split('T')[0];
+
+
+    const { data, error } =
+        await supabaseClient
+            .from('lancamentos')
+            .select('tipo,valor')
+            .eq('cliente_id', empresaAtual)
+            .gte('data', primeiroDia)
+            .lte('data', ultimoDia);
+
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+    }
+
+
+    let entradas = 0;
+    let saidas = 0;
+
+
+    (data || []).forEach(lanc => {
+
+        if (lanc.tipo === 'entrada')
+            entradas += Number(lanc.valor);
+
+        if (lanc.tipo === 'saida')
+            saidas += Number(lanc.valor);
+
+    });
+
+
+    const resultado =
+        entradas - saidas;
+
+
+    const margem =
+        entradas > 0
+            ? (resultado / entradas) * 100
+            : 0;
+
+
+    document.getElementById(
+        'faturamento'
+    ).textContent = dinheiro(entradas);
+
+    document.getElementById(
+        'despesas'
+    ).textContent = dinheiro(saidas);
+
+    document.getElementById(
+        'resultado'
+    ).textContent = dinheiro(resultado);
+
+    document.getElementById(
+        'margem'
+    ).textContent =
+        margem.toFixed(1) + '%';
+
+
+    document.getElementById(
+        'dreReceita'
+    ).textContent = dinheiro(entradas);
+
+    document.getElementById(
+        'dreDespesas'
+    ).textContent = dinheiro(saidas);
+
+    document.getElementById(
+        'dreResultado'
+    ).textContent = dinheiro(resultado);
+
+
+    await carregarSaldo();
+
+    await carregarContasPagar();
+
+    await carregarContasReceber();
+
+    await carregarMeta();
+
+}
+
+
+/* SALDO */
+
+async function carregarSaldo() {
+
+    const { data, error } =
+        await supabaseClient
+            .from('contas')
+            .select('saldo_inicial')
+            .eq('cliente_id', empresaAtual)
+            .eq('ativo', true);
+
+
+    if (error) return;
+
+
+    let saldo =
+        (data || []).reduce(
+            (total, conta) =>
+                total + Number(conta.saldo_inicial || 0),
+            0
+        );
+
+
+    const { data: lancamentos } =
+        await supabaseClient
+            .from('lancamentos')
+            .select('tipo,valor')
+            .eq('cliente_id', empresaAtual);
+
+
+    (lancamentos || []).forEach(lanc => {
+
+        if (lanc.tipo === 'entrada')
+            saldo += Number(lanc.valor);
+
+        if (lanc.tipo === 'saida')
+            saldo -= Number(lanc.valor);
+
+    });
+
+
+    document.getElementById(
+        'saldo'
+    ).textContent = dinheiro(saldo);
+
+}
+
+
+/* FLUXO */
+
+async function carregarFluxo() {
+
+    if (!empresaAtual) return;
+
+
+    const ano =
+        Number(
+            document.getElementById('anoSelect').value
+        );
+
+    const mes =
+        Number(
+            document.getElementById('mesSelect').value
+        );
+
+
+    const primeiro =
+        `${ano}-${String(mes).padStart(2,'0')}-01`;
+
+    const ultimo =
+        new Date(
+            ano,
+            mes,
+            0
+        ).toISOString().split('T')[0];
+
+
+    const { data, error } =
+        await supabaseClient
+            .from('lancamentos')
+            .select('data,tipo,valor')
+            .eq('cliente_id', empresaAtual)
+            .gte('data', primeiro)
+            .lte('data', ultimo)
+            .order('data');
+
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+    }
+
 
     const tabela =
-        document.getElementById('diasTabela');
+        document.getElementById(
+            'fluxoTabela'
+        );
 
     tabela.innerHTML = '';
 
-    for(let dia = 1; dia <= quantidadeDias; dia++) {
 
-        const data =
-            String(dia).padStart(2, '0')
-            + '/'
-            + String(mes).padStart(2, '0')
-            + '/'
-            + ano;
+    const dias =
+        new Date(
+            ano,
+            mes,
+            0
+        ).getDate();
 
-        tabela.innerHTML += `
 
-        <tr>
+    for (let dia = 1; dia <= dias; dia++) {
 
-            <td>${data}</td>
+        const dataDia =
+            `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
 
-            <td class="entrada">
-                R$ 0,00
-            </td>
 
-            <td class="saida">
-                R$ 0,00
-            </td>
+        const registros =
+            (data || []).filter(
+                item => item.data === dataDia
+            );
 
-            <td>
-                R$ 0,00
-            </td>
 
-            <td>
-                0
-            </td>
+        let entradas = 0;
+        let saidas = 0;
 
-        </tr>
 
+        registros.forEach(item => {
+
+            if (item.tipo === 'entrada')
+                entradas += Number(item.valor);
+
+            if (item.tipo === 'saida')
+                saidas += Number(item.valor);
+
+        });
+
+
+        const saldo =
+            entradas - saidas;
+
+
+        const tr =
+            document.createElement('tr');
+
+
+        tr.innerHTML = `
+            <td>${dataDia.split('-').reverse().join('/')}</td>
+            <td class="green">${dinheiro(entradas)}</td>
+            <td class="red">${dinheiro(saidas)}</td>
+            <td>${dinheiro(saldo)}</td>
+            <td>${registros.length}</td>
         `;
+
+
+        tabela.appendChild(tr);
+
     }
-}
-
-
-/* ==========================
-   MODAL
-========================== */
-
-function abrirModal() {
-
-    document.getElementById('modal').style.display = 'flex';
 
 }
 
 
-function fecharModal() {
+/* MODAL */
 
-    document.getElementById('modal').style.display = 'none';
+function abrirModalLancamento() {
 
-}
+    if (!empresaAtual) {
 
-
-/* ==========================
-   SALVAR LANÇAMENTO
-========================== */
-
-function salvarLancamento() {
-
-    const tipo =
-        document.getElementById('tipoLancamento').value;
-
-    const descricao =
-        document.getElementById('descricao').value;
-
-    const data =
-        document.getElementById('dataLancamento').value;
-
-    const valor =
-        document.getElementById('valorLancamento').value;
-
-    if(!descricao || !data || !valor) {
-
-        alert('Preencha todos os campos.');
+        alert(
+            'Selecione uma empresa primeiro.'
+        );
 
         return;
-
     }
 
-    alert(
-        'Lançamento registrado com sucesso!'
-    );
 
-    fecharModal();
+    document.getElementById(
+        'modalLancamento'
+    ).style.display = 'flex';
+
+
+    const hoje =
+        new Date().toISOString().split('T')[0];
+
+    document.getElementById(
+        'lancData'
+    ).value = hoje;
+
+
+    carregarContasLancamento();
 
 }
 
 
-/* ==========================
-   INICIAR
-========================== */
+function fecharModalLancamento() {
 
-gerarDias();
+    document.getElementById(
+        'modalLancamento'
+    ).style.display = 'none';
+
+}
+
+
+/* CONTAS DO LANÇAMENTO */
+
+async function carregarContasLancamento() {
+
+    const { data } =
+        await supabaseClient
+            .from('contas')
+            .select('id,nome')
+            .eq('cliente_id', empresaAtual)
+            .eq('ativo', true)
+            .order('nome');
+
+
+    const select =
+        document.getElementById(
+            'lancConta'
+        );
+
+
+    select.innerHTML =
+        '<option value="">Selecionar conta</option>';
+
+
+    (data || []).forEach(conta => {
+
+        const option =
+            document.createElement('option');
+
+        option.value = conta.id;
+        option.textContent = conta.nome;
+
+        select.appendChild(option);
+
+    });
+
+}
+
+
+/* SALVAR LANÇAMENTO */
+
+async function salvarLancamento() {
+
+    const data =
+        document.getElementById(
+            'lancData'
+        ).value;
+
+    const tipo =
+        document.getElementById(
+            'lancTipo'
+        ).value;
+
+    const descricao =
+        document.getElementById(
+            'lancDescricao'
+        ).value.trim();
+
+    const valor =
+        Number(
+            document.getElementById(
+                'lancValor'
+            ).value
+        );
+
+    const conta =
+        document.getElementById(
+            'lancConta'
+        ).value;
+
+
+    if (!data || !descricao || !valor) {
+
+        alert(
+            'Preencha data, descrição e valor.'
+        );
+
+        return;
+    }
+
+
+    const { error } =
+        await supabaseClient
+            .from('lancamentos')
+            .insert({
+
+                cliente_id: empresaAtual,
+
+                data: data,
+
+                tipo: tipo,
+
+                descricao: descricao,
+
+                valor: valor,
+
+                conta_id: conta || null,
+
+                origem: 'manual'
+
+            });
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            'Erro ao salvar lançamento.'
+        );
+
+        return;
+    }
+
+
+    alert(
+        'Lançamento salvo com sucesso!'
+    );
+
+
+    document.getElementById(
+        'lancDescricao'
+    ).value = '';
+
+    document.getElementById(
+        'lancValor'
+    ).value = '';
+
+
+    fecharModalLancamento();
+
+    await carregarDashboard();
+
+    await carregarFluxo();
+
+}
+
+
+/* CONTAS A PAGAR */
+
+async function carregarContasPagar() {
+
+    const { data } =
+        await supabaseClient
+            .from('contas_pagar')
+            .select('descricao,valor,vencimento,status')
+            .eq('cliente_id', empresaAtual)
+            .order('vencimento');
+
+
+    const tabela =
+        document.getElementById(
+            'pagarTabela'
+        );
+
+
+    tabela.innerHTML = '';
+
+
+    (data || []).forEach(item => {
+
+        tabela.innerHTML += `
+            <tr>
+                <td>${item.descricao}</td>
+                <td>${item.vencimento}</td>
+                <td class="red">${dinheiro(item.valor)}</td>
+                <td>${item.status}</td>
+            </tr>
+        `;
+
+    });
+
+}
+
+
+/* CONTAS A RECEBER */
+
+async function carregarContasReceber() {
+
+    const { data } =
+        await supabaseClient
+            .from('contas_receber')
+            .select('nome_cliente,descricao,valor,vencimento,status')
+            .eq('cliente_id', empresaAtual)
+            .order('vencimento');
+
+
+    const tabela =
+        document.getElementById(
+            'receberTabela'
+        );
+
+
+    tabela.innerHTML = '';
+
+
+    (data || []).forEach(item => {
+
+        tabela.innerHTML += `
+            <tr>
+                <td>${item.nome_cliente || item.descricao}</td>
+                <td>${item.vencimento}</td>
+                <td class="green">${dinheiro(item.valor)}</td>
+                <td>${item.status}</td>
+            </tr>
+        `;
+
+    });
+
+}
+
+
+/* META */
+
+async function carregarMeta() {
+
+    const ano =
+        Number(
+            document.getElementById('anoSelect').value
+        );
+
+    const mes =
+        Number(
+            document.getElementById('mesSelect').value
+        );
+
+
+    const inicio =
+        `${ano}-${String(mes).padStart(2,'0')}-01`;
+
+
+    const { data } =
+        await supabaseClient
+            .from('metas')
+            .select('meta_faturamento')
+            .eq('cliente_id', empresaAtual)
+            .eq('mes', inicio)
+            .maybeSingle();
+
+
+    const valor =
+        data
+            ? Number(data.meta_faturamento)
+            : 0;
+
+
+    document.getElementById(
+        'metaFaturamento'
+    ).textContent = dinheiro(valor);
+
+}
+
+
+/* EVENTOS DE MÊS/ANO */
+
+document
+    .getElementById('anoSelect')
+    .addEventListener(
+        'change',
+        () => {
+
+            carregarDashboard();
+
+            carregarFluxo();
+
+        }
+    );
+
+
+document
+    .getElementById('mesSelect')
+    .addEventListener(
+        'change',
+        () => {
+
+            carregarDashboard();
+
+            carregarFluxo();
+
+        }
+    );
+
+
+/* INICIALIZAÇÃO */
+
+carregarEmpresas();
 
 </script>
 
