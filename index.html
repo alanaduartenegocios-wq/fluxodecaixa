@@ -307,12 +307,113 @@ td {
         gap: 15px;
     }
 }
+
+/* LOGIN */
+#telaLogin {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f6f7f9;
+    padding: 20px;
+}
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+.login-logo {
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.login-subtitle {
+    color: #6b7280;
+    margin-bottom: 26px;
+}
+.login-card .form-group {
+    margin-bottom: 16px;
+}
+.login-card label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.login-card input {
+    width: 100%;
+}
+.login-card .btn {
+    width: 100%;
+    margin-top: 4px;
+}
+.login-error {
+    display: none;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: #fff1f2;
+    color: #b42318;
+    font-size: 13px;
+}
+.app.hidden,
+#telaLogin.hidden {
+    display: none !important;
+}
+.logout-btn {
+    margin-top: 28px;
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    padding: 11px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+}
+.logout-btn:hover {
+    background: #f8fafc;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="app">
+
+<div id="telaLogin">
+    <div class="login-card">
+        <div class="login-logo">Fluxo<span style="color:#2563eb">+</span></div>
+        <div class="login-subtitle">Entre para acessar seu controle financeiro.</div>
+
+        <form id="formLogin">
+            <div class="form-group">
+                <label for="loginEmail">E-mail</label>
+                <input type="email" id="loginEmail"
+                       value="alanaduarte.negocios@gmail.com"
+                       autocomplete="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="loginSenha">Senha</label>
+                <input type="password" id="loginSenha"
+                       autocomplete="current-password" required>
+            </div>
+
+            <button type="submit" class="btn" id="btnLogin">
+                Entrar
+            </button>
+
+            <div id="loginErro" class="login-error"></div>
+        </form>
+    </div>
+</div>
+
+<div class="app hidden">
 
     <aside class="sidebar">
 
@@ -359,6 +460,10 @@ td {
             </button>
 
         </div>
+
+        <button class="logout-btn" onclick="sairDoSistema()">
+            ↪️ Sair
+        </button>
 
     </aside>
 
@@ -708,7 +813,7 @@ td {
 
 <div class="form-group">
     <label>Quantidade</label>
-    <input type="number" id="lancQuantidade" min="1" step="1" value="1" onchange="preencherDadosProduto()">
+    <input type="number" id="lancQuantidade" min="1" step="1" value="1" oninput="preencherDadosProduto()">
 </div>
 
 <div class="form-group">
@@ -761,6 +866,100 @@ const supabaseClient =
 let empresaAtual = null;
 
 
+
+let usuarioAtual = null;
+
+function mostrarErroLogin(mensagem) {
+    const erro = document.getElementById('loginErro');
+    erro.textContent = mensagem;
+    erro.style.display = 'block';
+}
+
+async function entrarNoSistema(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const senha = document.getElementById('loginSenha').value;
+    const botao = document.getElementById('btnLogin');
+
+    const erro = document.getElementById('loginErro');
+    erro.style.display = 'none';
+
+    botao.disabled = true;
+    botao.textContent = 'Entrando...';
+
+    const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+            email,
+            password: senha
+        });
+
+    if (error) {
+        console.error(error);
+        mostrarErroLogin('E-mail ou senha inválidos.');
+        botao.disabled = false;
+        botao.textContent = 'Entrar';
+        return;
+    }
+
+    usuarioAtual = data.user;
+    await carregarAplicacao();
+    botao.disabled = false;
+    botao.textContent = 'Entrar';
+}
+
+async function carregarAplicacao() {
+    try {
+        document.getElementById('telaLogin').classList.add('hidden');
+        document.querySelector('.app').classList.remove('hidden');
+
+        await carregarEmpresas();
+
+        if (!empresaAtual) {
+            throw new Error('Nenhuma empresa vinculada ao usuário.');
+        }
+
+        const select = document.getElementById('empresaSelect');
+        select.value = empresaAtual;
+
+        await carregarDashboard();
+        await carregarFluxo();
+        await carregarProdutosLancamento();
+
+    } catch (error) {
+        console.error(error);
+        await supabaseClient.auth.signOut();
+
+        document.querySelector('.app').classList.add('hidden');
+        document.getElementById('telaLogin').classList.remove('hidden');
+
+        mostrarErroLogin(error.message || 'Não foi possível carregar o sistema.');
+    }
+}
+
+async function sairDoSistema() {
+    await supabaseClient.auth.signOut();
+    usuarioAtual = null;
+    empresaAtual = null;
+
+    document.querySelector('.app').classList.add('hidden');
+    document.getElementById('telaLogin').classList.remove('hidden');
+    document.getElementById('loginSenha').value = '';
+}
+
+async function iniciarAplicacao() {
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (data.session) {
+        usuarioAtual = data.session.user;
+        await carregarAplicacao();
+    } else {
+        document.querySelector('.app').classList.add('hidden');
+        document.getElementById('telaLogin').classList.remove('hidden');
+    }
+}
+
+
 /* FORMATAR DINHEIRO */
 
 function dinheiro(valor) {
@@ -780,42 +979,53 @@ function dinheiro(valor) {
 
 async function carregarEmpresas() {
 
-    const { data, error } =
+    if (!usuarioAtual) return;
+
+    const { data: vinculos, error: erroVinculos } =
+        await supabaseClient
+            .from('cliente_usuarios')
+            .select('cliente_id')
+            .eq('usuario_id', usuarioAtual.id);
+
+    if (erroVinculos) {
+        console.error(erroVinculos);
+        throw new Error('Não foi possível identificar sua empresa.');
+    }
+
+    const ids = [...new Set((vinculos || []).map(v => v.cliente_id))];
+
+    if (!ids.length) {
+        throw new Error('Seu usuário não possui uma empresa vinculada.');
+    }
+
+    const { data: empresas, error } =
         await supabaseClient
             .from('clientes')
             .select('id,nome')
+            .in('id', ids)
             .eq('ativo', true)
             .order('nome');
 
     if (error) {
-
         console.error(error);
-
-        alert(
-            'Não foi possível carregar as empresas.'
-        );
-
-        return;
+        throw new Error('Não foi possível carregar sua empresa.');
     }
 
-    const select =
-        document.getElementById('empresaSelect');
+    const select = document.getElementById('empresaSelect');
 
-    select.innerHTML =
-        '<option value="">Selecionar empresa</option>';
+    select.innerHTML = '<option value="">Selecionar empresa</option>';
 
-    data.forEach(empresa => {
-
-        const option =
-            document.createElement('option');
-
+    (empresas || []).forEach(empresa => {
+        const option = document.createElement('option');
         option.value = empresa.id;
         option.textContent = empresa.nome;
-
         select.appendChild(option);
-
     });
 
+    if (empresas && empresas.length === 1) {
+        select.value = empresas[0].id;
+        empresaAtual = empresas[0].id;
+    }
 }
 
 
@@ -1201,34 +1411,15 @@ async function carregarFluxo() {
 
 /* MODAL */
 
-async function abrirModalLancamento() {
+function abrirModalLancamento() {
 
     if (!empresaAtual) {
 
-        const {
-            data: { user }
-        } = await supabaseClient.auth.getUser();
+        alert(
+            'Selecione uma empresa primeiro.'
+        );
 
-        if (!user) {
-            alert('Usuário não autenticado.');
-            return;
-        }
-
-        const { data: vinculo, error } =
-            await supabaseClient
-                .from('cliente_usuarios')
-                .select('cliente_id')
-                .eq('usuario_id', user.id)
-                .limit(1)
-                .single();
-
-        if (error || !vinculo) {
-            alert('Não foi possível identificar a empresa.');
-            console.error(error);
-            return;
-        }
-
-        empresaAtual = vinculo.cliente_id;
+        return;
     }
 
 
@@ -1244,13 +1435,13 @@ async function abrirModalLancamento() {
         'lancData'
     ).value = hoje;
 
-    document.getElementById('lancTipo').value = 'entrada';
+    document.getElementById('lancProduto').value = '';
     document.getElementById('lancQuantidade').value = 1;
     document.getElementById('lancDescricao').value = '';
     document.getElementById('lancValor').value = '';
 
-    await carregarProdutosLancamento();
     await carregarContasLancamento();
+    await carregarProdutosLancamento();
 }
 
 
@@ -1269,107 +1460,69 @@ async function carregarProdutosLancamento() {
     const select = document.getElementById('lancProduto');
 
     if (!select) {
-        console.error('Campo lancProduto não encontrado no HTML.');
+        console.error('Campo #lancProduto não existe.');
         return;
     }
 
-    select.innerHTML = '<option value="">Carregando produtos...</option>';
-    select.disabled = true;
-
-    /*
-     * IMPORTANTE:
-     * Se o usuário já escolheu uma empresa no seletor superior,
-     * usamos essa empresa. A versão anterior sobrescrevia empresaAtual
-     * com o primeiro vínculo encontrado em cliente_usuarios, o que podia
-     * carregar os produtos de outra empresa.
-     */
-    let clienteId = empresaAtual;
-
-    if (!clienteId) {
-
-        const {
-            data: { user },
-            error: userError
-        } = await supabaseClient.auth.getUser();
-
-        if (userError || !user) {
-            console.error('Usuário não autenticado:', userError);
-            select.innerHTML =
-                '<option value="">Usuário não autenticado</option>';
-            select.disabled = false;
-            return;
-        }
-
-        const { data: vinculo, error: vinculoError } =
-            await supabaseClient
-                .from('cliente_usuarios')
-                .select('cliente_id')
-                .eq('usuario_id', user.id)
-                .limit(1)
-                .maybeSingle();
-
-        if (vinculoError || !vinculo) {
-            console.error(
-                'Vínculo empresa/usuário não encontrado:',
-                vinculoError
-            );
-            select.innerHTML =
-                '<option value="">Empresa não encontrada</option>';
-            select.disabled = false;
-            return;
-        }
-
-        clienteId = vinculo.cliente_id;
-        empresaAtual = clienteId;
+    if (!empresaAtual) {
+        select.innerHTML =
+            '<option value="">Selecione uma empresa primeiro</option>';
+        return;
     }
 
-    console.log('Carregando produtos para cliente:', clienteId);
+    select.disabled = true;
+    select.innerHTML =
+        '<option value="">Carregando produtos...</option>';
 
-    const { data: produtos, error: produtosError } =
+    console.log(
+        '[Fluxo+] Buscando produtos da empresa:',
+        empresaAtual
+    );
+
+    const { data: produtos, error } =
         await supabaseClient
             .from('produtos')
-            .select('id, nome, preco_venda')
-            .eq('cliente_id', clienteId)
+            .select('id,nome,preco_venda,ativo,cliente_id')
+            .eq('cliente_id', empresaAtual)
             .eq('ativo', true)
             .order('nome', { ascending: true });
 
-    if (produtosError) {
+    if (error) {
 
         console.error(
-            'ERRO SUPABASE AO CARREGAR PRODUTOS:',
-            produtosError
+            '[Fluxo+] ERRO AO BUSCAR PRODUTOS:',
+            error
         );
 
         select.innerHTML =
-            '<option value="">Erro ao carregar produtos</option>';
+            '<option value="">Erro de permissão ao carregar produtos</option>';
 
         select.disabled = false;
 
         alert(
-            'Não foi possível carregar os produtos. ' +
-            'Abra o console (F12) para ver o erro do Supabase.'
+            'O banco encontrou um bloqueio ao consultar os produtos. ' +
+            'Vamos corrigir a política RLS da tabela produtos.'
         );
-
-        return;
-    }
-
-    if (!produtos || produtos.length === 0) {
-
-        console.warn(
-            'Nenhum produto encontrado para o cliente:',
-            clienteId
-        );
-
-        select.innerHTML =
-            '<option value="">Nenhum produto cadastrado</option>';
-
-        select.disabled = false;
 
         return;
     }
 
     select.innerHTML =
         '<option value="">Selecionar produto</option>';
+
+    if (!produtos || produtos.length === 0) {
+
+        console.warn(
+            '[Fluxo+] Nenhum produto retornado para:',
+            empresaAtual
+        );
+
+        select.innerHTML =
+            '<option value="">Nenhum produto cadastrado</option>';
+
+        select.disabled = false;
+        return;
+    }
 
     produtos.forEach(produto => {
 
@@ -1393,33 +1546,41 @@ async function carregarProdutosLancamento() {
     select.disabled = false;
 
     console.log(
-        `Produtos carregados com sucesso: ${produtos.length}`,
-        'Cliente:',
-        clienteId
+        `[Fluxo+] ${produtos.length} produtos carregados com sucesso.`
     );
 }
 
 /* PREENCHER DADOS DO PRODUTO */
-function preencherDadosProduto() {
 
-    const select = document.getElementById('lancProduto');
-    const option = select.options[select.selectedIndex];
-
+async function preencherDadosProduto() {
+    
+    const produtoId = document.getElementById('lancProduto').value;
     const quantidade = Number(
         document.getElementById('lancQuantidade').value
     ) || 1;
 
-    if (!select.value || !option || !option.dataset.preco) {
+    if (!produtoId) {
         document.getElementById('lancDescricao').value = '';
         document.getElementById('lancValor').value = '';
         return;
     }
 
+    const { data: produto, error } = await supabaseClient
+        .from('produtos')
+        .select('id, nome, preco_venda')
+        .eq('id', produtoId)
+        .single();
+
+    if (error || !produto) {
+        console.error(error);
+        return;
+    }
+
     document.getElementById('lancDescricao').value =
-        option.dataset.nome;
+        produto.nome;
 
     const valorTotal =
-        Number(option.dataset.preco) * quantidade;
+        Number(produto.preco_venda) * quantidade;
 
     document.getElementById('lancValor').value =
         valorTotal.toFixed(2);
@@ -1675,6 +1836,19 @@ async function carregarMeta() {
 }
 
 
+
+document
+    .getElementById('formLogin')
+    .addEventListener('submit', entrarNoSistema);
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+        usuarioAtual = null;
+        empresaAtual = null;
+    }
+});
+
+
 /* EVENTOS DE MÊS/ANO */
 
 document
@@ -1707,7 +1881,7 @@ document
 
 /* INICIALIZAÇÃO */
 
-carregarEmpresas();
+iniciarAplicacao();
 
 </script>
 
