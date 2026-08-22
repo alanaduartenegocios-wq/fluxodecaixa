@@ -378,6 +378,32 @@ td {
 .logout-btn:hover {
     background: #f8fafc;
 }
+.login-link {
+    display: block;
+    width: fit-content;
+    margin: 16px auto 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #2563eb;
+    font-size: 14px;
+    cursor: pointer;
+}
+.login-link:hover {
+    text-decoration: underline;
+}
+.login-success {
+    display: none;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: #ecfdf3;
+    color: #067647;
+    font-size: 13px;
+}
+#telaLogin .login-card.hidden {
+    display: none;
+}
 
 </style>
 </head>
@@ -394,7 +420,6 @@ td {
             <div class="form-group">
                 <label for="loginEmail">E-mail</label>
                 <input type="email" id="loginEmail"
-                       value="alanaduarte.negocios@gmail.com"
                        autocomplete="username" required>
             </div>
 
@@ -409,6 +434,57 @@ td {
             </button>
 
             <div id="loginErro" class="login-error"></div>
+            <button type="button" class="login-link" onclick="abrirRecuperacaoSenha()">
+                Esqueci minha senha
+            </button>
+        </form>
+    </div>
+
+    <div id="telaRecuperar" class="login-card hidden">
+        <div class="login-logo">Fluxo<span style="color:#2563eb">+</span></div>
+        <div class="login-subtitle">Informe seu e-mail para receber o link de redefinição.</div>
+
+        <form id="formRecuperarSenha">
+            <div class="form-group">
+                <label for="recuperarEmail">E-mail</label>
+                <input type="email" id="recuperarEmail" autocomplete="email" required>
+            </div>
+
+            <button type="submit" class="btn" id="btnRecuperarSenha">
+                Enviar link de recuperação
+            </button>
+
+            <div id="recuperarErro" class="login-error"></div>
+            <div id="recuperarSucesso" class="login-success"></div>
+            <button type="button" class="login-link" onclick="voltarParaLogin()">
+                Voltar para o login
+            </button>
+        </form>
+    </div>
+
+    <div id="telaNovaSenha" class="login-card hidden">
+        <div class="login-logo">Fluxo<span style="color:#2563eb">+</span></div>
+        <div class="login-subtitle">Crie sua nova senha para continuar.</div>
+
+        <form id="formNovaSenha">
+            <div class="form-group">
+                <label for="novaSenha">Nova senha</label>
+                <input type="password" id="novaSenha" minlength="6"
+                       autocomplete="new-password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmarNovaSenha">Confirmar nova senha</label>
+                <input type="password" id="confirmarNovaSenha" minlength="6"
+                       autocomplete="new-password" required>
+            </div>
+
+            <button type="submit" class="btn" id="btnNovaSenha">
+                Salvar nova senha
+            </button>
+
+            <div id="novaSenhaErro" class="login-error"></div>
+            <div id="novaSenhaSucesso" class="login-success"></div>
         </form>
     </div>
 </div>
@@ -869,10 +945,135 @@ let empresaAtual = null;
 
 let usuarioAtual = null;
 
+function mostrarMensagem(id, mensagem, tipo = 'erro') {
+    const elemento = document.getElementById(id);
+    elemento.textContent = mensagem;
+    elemento.style.display = 'block';
+
+    if (tipo === 'sucesso') {
+        elemento.classList.add('login-success');
+        elemento.classList.remove('login-error');
+    } else {
+        elemento.classList.add('login-error');
+        elemento.classList.remove('login-success');
+    }
+}
+
+function ocultarMensagem(id) {
+    const elemento = document.getElementById(id);
+    elemento.style.display = 'none';
+    elemento.textContent = '';
+}
+
 function mostrarErroLogin(mensagem) {
-    const erro = document.getElementById('loginErro');
-    erro.textContent = mensagem;
-    erro.style.display = 'block';
+    mostrarMensagem('loginErro', mensagem);
+}
+
+function abrirRecuperacaoSenha() {
+    document.querySelector('#telaLogin > .login-card').classList.add('hidden');
+    document.getElementById('telaRecuperar').classList.remove('hidden');
+    document.getElementById('recuperarEmail').value =
+        document.getElementById('loginEmail').value.trim();
+    ocultarMensagem('recuperarErro');
+    ocultarMensagem('recuperarSucesso');
+}
+
+function voltarParaLogin() {
+    document.getElementById('telaRecuperar').classList.add('hidden');
+    document.getElementById('telaNovaSenha').classList.add('hidden');
+    document.querySelector('#telaLogin > .login-card').classList.remove('hidden');
+}
+
+function mostrarTelaNovaSenha() {
+    document.querySelector('#telaLogin > .login-card').classList.add('hidden');
+    document.getElementById('telaRecuperar').classList.add('hidden');
+    document.getElementById('telaNovaSenha').classList.remove('hidden');
+    ocultarMensagem('novaSenhaErro');
+    ocultarMensagem('novaSenhaSucesso');
+}
+
+async function solicitarRecuperacaoSenha(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('recuperarEmail').value.trim();
+    const botao = document.getElementById('btnRecuperarSenha');
+    ocultarMensagem('recuperarErro');
+    ocultarMensagem('recuperarSucesso');
+
+    botao.disabled = true;
+    botao.textContent = 'Enviando...';
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+    });
+
+    botao.disabled = false;
+    botao.textContent = 'Enviar link de recuperação';
+
+    if (error) {
+        console.error(error);
+        mostrarMensagem(
+            'recuperarErro',
+            'Não foi possível enviar o link. Verifique o e-mail e tente novamente.'
+        );
+        return;
+    }
+
+    mostrarMensagem(
+        'recuperarSucesso',
+        'Se este e-mail estiver cadastrado, você receberá um link para criar uma nova senha.',
+        'sucesso'
+    );
+}
+
+async function salvarNovaSenha(event) {
+    event.preventDefault();
+
+    const senha = document.getElementById('novaSenha').value;
+    const confirmacao = document.getElementById('confirmarNovaSenha').value;
+    const botao = document.getElementById('btnNovaSenha');
+    ocultarMensagem('novaSenhaErro');
+    ocultarMensagem('novaSenhaSucesso');
+
+    if (senha.length < 6) {
+        mostrarMensagem('novaSenhaErro', 'A senha precisa ter pelo menos 6 caracteres.');
+        return;
+    }
+
+    if (senha !== confirmacao) {
+        mostrarMensagem('novaSenhaErro', 'As senhas não coincidem.');
+        return;
+    }
+
+    botao.disabled = true;
+    botao.textContent = 'Salvando...';
+
+    const { error } = await supabaseClient.auth.updateUser({ password: senha });
+
+    botao.disabled = false;
+    botao.textContent = 'Salvar nova senha';
+
+    if (error) {
+        console.error(error);
+        mostrarMensagem(
+            'novaSenhaErro',
+            'Este link expirou ou é inválido. Solicite uma nova recuperação de senha.'
+        );
+        return;
+    }
+
+    mostrarMensagem(
+        'novaSenhaSucesso',
+        'Senha atualizada com sucesso. Você já pode entrar no sistema.',
+        'sucesso'
+    );
+
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setTimeout(() => {
+        document.getElementById('telaNovaSenha').classList.add('hidden');
+        document.querySelector('#telaLogin > .login-card').classList.remove('hidden');
+        document.getElementById('loginSenha').focus();
+    }, 1800);
 }
 
 async function entrarNoSistema(event) {
@@ -948,6 +1149,15 @@ async function sairDoSistema() {
 }
 
 async function iniciarAplicacao() {
+    const parametrosRecuperacao = new URLSearchParams(
+        window.location.hash.replace(/^#/, '')
+    );
+
+    if (parametrosRecuperacao.get('type') === 'recovery') {
+        mostrarTelaNovaSenha();
+        return;
+    }
+
     const { data } = await supabaseClient.auth.getSession();
 
     if (data.session) {
@@ -1840,6 +2050,14 @@ async function carregarMeta() {
 document
     .getElementById('formLogin')
     .addEventListener('submit', entrarNoSistema);
+
+document
+    .getElementById('formRecuperarSenha')
+    .addEventListener('submit', solicitarRecuperacaoSenha);
+
+document
+    .getElementById('formNovaSenha')
+    .addEventListener('submit', salvarNovaSenha);
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
