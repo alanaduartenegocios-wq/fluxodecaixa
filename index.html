@@ -1158,9 +1158,13 @@ async function iniciarAplicacao() {
         window.location.hash.replace(/^#/, '')
     );
 
-    if (parametrosRecuperacao.get('type') === 'recovery') {
-        const accessToken = parametrosRecuperacao.get('access_token');
-        const refreshToken = parametrosRecuperacao.get('refresh_token');
+    const accessToken = parametrosRecuperacao.get('access_token');
+    const refreshToken = parametrosRecuperacao.get('refresh_token');
+    const ehLinkDeRecuperacao =
+        parametrosRecuperacao.get('type') === 'recovery' ||
+        Boolean(accessToken && refreshToken);
+
+    if (ehLinkDeRecuperacao) {
 
         if (!accessToken || !refreshToken) {
             mostrarTelaNovaSenha();
