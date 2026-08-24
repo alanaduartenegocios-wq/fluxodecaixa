@@ -292,6 +292,23 @@ td {
     font-size: 13px;
 }
 
+.alerta-estoque {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #b42318;
+}
+.status-estoque-ok {
+    color: #138a4b;
+    font-weight: 600;
+}
+.status-estoque-baixo {
+    color: #d93025;
+    font-weight: 700;
+}
+
 /* RESPONSIVO */
 @media(max-width: 900px) {
 
@@ -763,16 +780,21 @@ td {
         <section id="pagina-produtos" class="hidden">
             <div class="panel">
                 <div class="panel-header">
-                    <h2>Produtos</h2>
-                    <button class="btn">+ Novo produto</button>
+                    <div>
+                        <h2>Produtos</h2>
+                        <p>Produtos cadastrados para venda individual.</p>
+                    </div>
+                    <button class="btn" onclick="carregarProdutos()">Atualizar lista</button>
                 </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Produto</th>
                             <th>Preço de venda</th>
-                            <th>Custo</th>
-                            <th>Margem</th>
+                            <th>Estoque (kg)</th>
+                            <th>Mínimo (kg)</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody id="produtosTabela"></tbody>
@@ -782,18 +804,23 @@ td {
 
 
         <section id="pagina-estoque" class="hidden">
+            <div id="alertaEstoque" class="alerta-estoque hidden"></div>
             <div class="panel">
                 <div class="panel-header">
-                    <h2>Estoque semanal</h2>
+                    <div>
+                        <h2>Estoque</h2>
+                        <p>Informe quantos quilos estão disponíveis e defina o mínimo para reposição.</p>
+                    </div>
+                    <button class="btn" onclick="carregarEstoque()">Atualizar estoque</button>
                 </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Item</th>
-                            <th>Estoque inicial</th>
-                            <th>Entradas</th>
-                            <th>Consumo</th>
-                            <th>Estoque final</th>
+                            <th>Disponível (kg)</th>
+                            <th>Mínimo (kg)</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody id="estoqueTabela"></tbody>
@@ -970,6 +997,39 @@ td {
 
 </div>
 
+<div id="modalProduto" class="modal-bg">
+    <div class="modal">
+        <h2>Editar produto e estoque</h2>
+
+        <input type="hidden" id="produtoEditId">
+
+        <div class="form-group">
+            <label for="produtoEditNome">Produto</label>
+            <input type="text" id="produtoEditNome" required>
+        </div>
+
+        <div class="form-group">
+            <label for="produtoEditPreco">Preço de venda (R$)</label>
+            <input type="number" id="produtoEditPreco" min="0" step="0.01" required>
+        </div>
+
+        <div class="form-group">
+            <label for="produtoEditEstoque">Quantidade disponível (kg)</label>
+            <input type="number" id="produtoEditEstoque" min="0" step="0.001" required>
+        </div>
+
+        <div class="form-group">
+            <label for="produtoEditMinimo">Alerta quando chegar a (kg)</label>
+            <input type="number" id="produtoEditMinimo" min="0" step="0.001" required>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="fecharModalProduto()">Cancelar</button>
+            <button class="btn" onclick="salvarProduto()">Salvar alterações</button>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -996,6 +1056,7 @@ let empresaAtual = null;
 
 
 let usuarioAtual = null;
+let produtosCadastrados = [];
 
 function mostrarMensagem(id, mensagem, tipo = 'erro') {
     const elemento = document.getElementById(id);
@@ -1178,6 +1239,8 @@ async function carregarAplicacao() {
         await carregarDashboard();
         await carregarFluxo();
         await carregarProdutosLancamento();
+        await carregarProdutos();
+        await carregarEstoque();
 
     } catch (error) {
         console.error(error);
@@ -1336,6 +1399,8 @@ async function trocarEmpresa() {
     await carregarDashboard();
     await carregarFluxo();
     await carregarProdutosLancamento();
+    await carregarProdutos();
+    await carregarEstoque();
 }
 
 
@@ -1423,6 +1488,9 @@ function abrirPagina(pagina, botao) {
     document.getElementById(
         'subtituloPagina'
     ).textContent = nomes[pagina][1];
+
+    if (pagina === 'produtos') carregarProdutos();
+    if (pagina === 'estoque') carregarEstoque();
 
 }
 
@@ -2054,6 +2122,176 @@ async function carregarContasReceber() {
 
 }
 
+
+/* PRODUTOS E ESTOQUE */
+
+function formatarKg(valor) {
+    return Number(valor || 0).toLocaleString('pt-BR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 3
+    }) + ' kg';
+}
+
+function produtoEmEstoqueBaixo(produto) {
+    const atual = Number(produto.estoque_kg || 0);
+    const minimo = Number(produto.estoque_minimo_kg || 0);
+    return minimo > 0 && atual <= minimo;
+}
+
+function criarBotaoEditar(produto, texto = 'Editar') {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'btn btn-secondary';
+    botao.textContent = texto;
+    botao.onclick = () => abrirModalProduto(produto.id);
+    return botao;
+}
+
+async function carregarProdutos() {
+    if (!empresaAtual) return;
+
+    const { data, error } = await supabaseClient
+        .from('produtos')
+        .select('id,nome,preco_venda,ativo,estoque_kg,estoque_minimo_kg')
+        .eq('cliente_id', empresaAtual)
+        .order('nome', { ascending: true });
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    produtosCadastrados = data || [];
+    const tabela = document.getElementById('produtosTabela');
+    tabela.innerHTML = '';
+
+    produtosCadastrados.forEach(produto => {
+        const tr = document.createElement('tr');
+        const baixo = produtoEmEstoqueBaixo(produto);
+
+        const valores = [
+            produto.nome,
+            dinheiro(produto.preco_venda),
+            formatarKg(produto.estoque_kg),
+            formatarKg(produto.estoque_minimo_kg),
+            baixo ? 'Estoque baixo' : (produto.ativo ? 'Ativo' : 'Inativo')
+        ];
+
+        valores.forEach((valor, indice) => {
+            const td = document.createElement('td');
+            td.textContent = valor;
+            if (indice === 4) {
+                td.className = baixo ? 'status-estoque-baixo' : 'status-estoque-ok';
+            }
+            tr.appendChild(td);
+        });
+
+        const acao = document.createElement('td');
+        acao.appendChild(criarBotaoEditar(produto));
+        tr.appendChild(acao);
+        tabela.appendChild(tr);
+    });
+}
+
+async function carregarEstoque() {
+    if (!empresaAtual) return;
+
+    if (!produtosCadastrados.length) {
+        await carregarProdutos();
+    }
+
+    const tabela = document.getElementById('estoqueTabela');
+    const alerta = document.getElementById('alertaEstoque');
+    tabela.innerHTML = '';
+
+    const baixos = produtosCadastrados.filter(produtoEmEstoqueBaixo);
+
+    if (baixos.length) {
+        alerta.classList.remove('hidden');
+        alerta.textContent =
+            'Atenção: ' + baixos.map(item => item.nome).join(', ') +
+            ' precisa(m) de reposição.';
+    } else {
+        alerta.classList.add('hidden');
+        alerta.textContent = '';
+    }
+
+    produtosCadastrados.forEach(produto => {
+        const tr = document.createElement('tr');
+        const baixo = produtoEmEstoqueBaixo(produto);
+
+        [produto.nome, formatarKg(produto.estoque_kg), formatarKg(produto.estoque_minimo_kg)]
+            .forEach(valor => {
+                const td = document.createElement('td');
+                td.textContent = valor;
+                tr.appendChild(td);
+            });
+
+        const status = document.createElement('td');
+        status.textContent = baixo ? 'Comprar' : 'Em estoque';
+        status.className = baixo ? 'status-estoque-baixo' : 'status-estoque-ok';
+        tr.appendChild(status);
+
+        const acao = document.createElement('td');
+        acao.appendChild(criarBotaoEditar(produto, 'Atualizar'));
+        tr.appendChild(acao);
+        tabela.appendChild(tr);
+    });
+}
+
+function abrirModalProduto(produtoId) {
+    const produto = produtosCadastrados.find(item => item.id === produtoId);
+    if (!produto) return;
+
+    document.getElementById('produtoEditId').value = produto.id;
+    document.getElementById('produtoEditNome').value = produto.nome || '';
+    document.getElementById('produtoEditPreco').value = Number(produto.preco_venda || 0);
+    document.getElementById('produtoEditEstoque').value = Number(produto.estoque_kg || 0);
+    document.getElementById('produtoEditMinimo').value =
+        Number(produto.estoque_minimo_kg || 0);
+    document.getElementById('modalProduto').style.display = 'flex';
+}
+
+function fecharModalProduto() {
+    document.getElementById('modalProduto').style.display = 'none';
+}
+
+async function salvarProduto() {
+    const id = document.getElementById('produtoEditId').value;
+    const nome = document.getElementById('produtoEditNome').value.trim();
+    const preco = Number(document.getElementById('produtoEditPreco').value);
+    const estoque = Number(document.getElementById('produtoEditEstoque').value);
+    const minimo = Number(document.getElementById('produtoEditMinimo').value);
+
+    if (!id || !nome || [preco, estoque, minimo].some(valor =>
+        !Number.isFinite(valor) || valor < 0
+    )) {
+        alert('Preencha produto, preço e quantidades com valores válidos.');
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from('produtos')
+        .update({
+            nome,
+            preco_venda: preco,
+            estoque_kg: estoque,
+            estoque_minimo_kg: minimo
+        })
+        .eq('id', id)
+        .eq('cliente_id', empresaAtual);
+
+    if (error) {
+        console.error(error);
+        alert('Não foi possível salvar o produto.');
+        return;
+    }
+
+    fecharModalProduto();
+    await carregarProdutos();
+    await carregarEstoque();
+    await carregarProdutosLancamento();
+}
 
 /* META */
 
