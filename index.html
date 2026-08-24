@@ -786,6 +786,18 @@ select:focus {
 }
 
 
+/* HOME FINANCEIRA — RESUMO */
+#pagina-home .home-saudacao { margin-bottom: 28px; }
+#pagina-home #homeData, #pagina-home #homeSaudacao { font-family: var(--pierson); font-size: 10px; letter-spacing: .04em; color: var(--texto-suave); text-transform: uppercase; }
+#pagina-home #homeSaudacao { margin-top: 7px; }
+#pagina-home #homeIntroducao { margin-top: 18px; font-family: var(--pierson); font-size: 16px; color: var(--vinho-escuro); }
+.home-resumo-financeiro { margin-bottom: 25px; }
+.home-resumo-titulo { margin-bottom: 14px; font-family: var(--pierson); font-size: 14px; font-weight: 600; color: var(--vinho-escuro); }
+.home-resumo-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.home-resumo-card { min-height: 120px; padding: 20px; border: 1px solid #dfcfbd; border-radius: 14px; background: #fffdf9; box-shadow: 0 10px 30px rgba(86, 28, 36, .04); font-family: var(--pierson); color: var(--texto-suave); font-size: 12px; line-height: 1.4; }
+.home-resumo-card strong { display: block; margin-top: 16px; color: var(--vinho-escuro); font-family: var(--pierson); font-size: 20px; letter-spacing: -.03em; }
+@media(max-width: 900px) { .home-resumo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 </style>
 </head>
 
@@ -999,33 +1011,21 @@ select:focus {
 <section id="pagina-home">
     <div class="home-saudacao">
         <p id="homeData"></p>
-        <h2 id="homeSaudacao">Olá 👋</h2>
-        <p>Aqui está o resumo financeiro da sua empresa.</p>
+        <p id="homeSaudacao">Bem-vinda!</p>
+        <p id="homeIntroducao">Aqui está o financeiro da sua empresa.</p>
     </div>
-
-    <div class="home-destaque">
-        <h2>Seu resumo financeiro de hoje</h2>
-        <p id="homeResumo">Carregando resumo financeiro...</p>
-    </div>
-
-    <div class="cards">
-        <div class="card"><div class="card-title">Saldo atual</div><div class="card-value blue" id="saldo">R$ 0,00</div></div>
-        <div class="card"><div class="card-title">Receitas do mês</div><div class="card-value green" id="faturamento">R$ 0,00</div></div>
-        <div class="card"><div class="card-title">Despesas do mês</div><div class="card-value red" id="despesas">R$ 0,00</div></div>
-        <div class="card"><div class="card-title">Resultado do mês</div><div class="card-value blue" id="resultado">R$ 0,00</div></div>
-        <div class="card"><div class="card-title">A receber</div><div class="card-value green" id="totalReceber">R$ 0,00</div></div>
-        <div class="card"><div class="card-title">A pagar</div><div class="card-value red" id="totalPagar">R$ 0,00</div></div>
-    </div>
-
-    <div class="home-grid">
-        <div class="panel"><div class="panel-header"><h2>Seu dia financeiro</h2></div><div class="home-conteudo" id="homeDia">Carregando...</div></div>
-        <div class="panel"><div class="panel-header"><h2>Saldo projetado ao final do dia</h2></div><div class="home-projecao" id="homeProjecao">R$ 0,00</div><p class="home-conteudo">Estimativa baseada nos vencimentos de hoje.</p></div>
-    </div>
-
+    <section class="home-resumo-financeiro">
+        <h2 class="home-resumo-titulo">Resumo financeiro</h2>
+        <div class="home-resumo-grid">
+            <div class="home-resumo-card"><div>Hoje</div><strong id="homeHoje">R$ 0,00</strong></div>
+            <div class="home-resumo-card"><div>Pagamentos previstos da semana</div><strong id="homePagamentosSemana">R$ 0,00</strong></div>
+            <div class="home-resumo-card"><div>Recebimentos previstos</div><strong id="homeRecebimentosSemana">R$ 0,00</strong></div>
+            <div class="home-resumo-card"><div>Projetado (conforme meta)</div><strong id="homeProjetadoMeta">R$ 0,00</strong></div>
+        </div>
+    </section>
     <div class="panel"><div class="panel-header"><h2>Ações rápidas</h2></div>
         <div class="acoes-rapidas"><button class="btn" onclick="abrirModalLancamento()">+ Novo lançamento</button><button class="btn btn-secondary" onclick="abrirPagina('receber', document.querySelector('.menu button[onclick*=receber]'))">Contas a receber</button><button class="btn btn-secondary" onclick="abrirPagina('pagar', document.querySelector('.menu button[onclick*=pagar]'))">Contas a pagar</button></div>
     </div>
-
     <div class="panel"><div class="panel-header"><h2>AD Insights</h2></div><div class="home-conteudo" id="homeInsights">Carregando insights...</div></div>
 </section>
 
@@ -1928,7 +1928,7 @@ async function carregarDashboard() {
     const { data, error } =
         await supabaseClient
             .from('lancamentos')
-            .select('tipo,valor')
+            .select('tipo,valor,data')
             .eq('cliente_id', empresaAtual)
             .gte('data', primeiroDia)
             .lte('data', ultimoDia);
@@ -1967,23 +1967,11 @@ async function carregarDashboard() {
             : 0;
 
 
-    document.getElementById(
-        'faturamento'
-    ).textContent = dinheiro(entradas);
+document.getElementById('dashFaturamento').textContent = dinheiro(entradas);
 
-    document.getElementById('dashFaturamento').textContent = dinheiro(entradas);
+document.getElementById('dashDespesas').textContent = dinheiro(saidas);
 
-    document.getElementById(
-        'despesas'
-    ).textContent = dinheiro(saidas);
-
-    document.getElementById('dashDespesas').textContent = dinheiro(saidas);
-
-    document.getElementById(
-        'resultado'
-    ).textContent = dinheiro(resultado);
-
-    document.getElementById('dashResultado').textContent = dinheiro(resultado);
+document.getElementById('dashResultado').textContent = dinheiro(resultado);
 
     document.getElementById(
         'margem'
@@ -2004,159 +1992,65 @@ async function carregarDashboard() {
     ).textContent = dinheiro(resultado);
 
 
-    await carregarSaldo();
+    const saldoAtual = await carregarSaldo();
 
     await carregarContasPagar();
 
     await carregarContasReceber();
 
     await carregarMeta();
-    await atualizarHomeFinanceira(entradas, saidas);
+    await atualizarHomeFinanceira(entradas, saidas, data || [], saldoAtual);
     await atualizarNotificacoesWhatsApp();
 
 }
 
 
-async function atualizarHomeFinanceira(entradas, saidas) {
+async function atualizarHomeFinanceira(entradas, saidas, lancamentos) {
     const hoje = new Date().toISOString().split('T')[0];
     const empresaSelecionada = document.getElementById('empresaSelect');
-    const nomeEmpresa = empresaSelecionada?.selectedOptions?.[0]?.textContent ||
-        'sua empresa';
+    const nomeEmpresa = empresaSelecionada?.selectedOptions?.[0]?.textContent || 'sua empresa';
 
-    document.getElementById('homeSaudacao').textContent =
-        'Bem-vindo, ' + nomeEmpresa + ' 👋';
+    document.getElementById('homeSaudacao').textContent = 'Bem-vinda, ' + nomeEmpresa;
     document.getElementById('homeData').textContent =
-        new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+        new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
 
-    const [pagar, receber] = await Promise.all([
-        supabaseClient.from('contas_pagar').select('valor,vencimento').eq('cliente_id', empresaAtual),
-        supabaseClient.from('contas_receber').select('valor,vencimento').eq('cliente_id', empresaAtual)
-    ]);
-    const pagamentos = pagar.data || [], recebimentos = receber.data || [];
-    const totalPagar = pagamentos.reduce((s, i) => s + Number(i.valor || 0), 0);
-    const totalReceber = recebimentos.reduce((s, i) => s + Number(i.valor || 0), 0);
-    document.getElementById('totalPagar').textContent = dinheiro(totalPagar);
-    document.getElementById('totalReceber').textContent = dinheiro(totalReceber);
-
-    const pagarHoje = pagamentos.filter(i => i.vencimento === hoje);
-    const receberHoje = recebimentos.filter(i => i.vencimento === hoje);
-    const vp = pagarHoje.reduce((s,i)=>s+Number(i.valor||0),0);
-    const vr = receberHoje.reduce((s,i)=>s+Number(i.valor||0),0);
-    const saldoTexto = document.getElementById('saldo').textContent;
-    const saldoNumero = Number(saldoTexto.replace(/[^0-9,-]/g,'').replace('.','').replace(',','.')) || 0;
-    const projetado = saldoNumero + vr - vp;
-
-    document.getElementById('homeResumo').textContent =
-        'Hoje há ' + dinheiro(vp) + ' em pagamentos previstos e ' +
-        dinheiro(vr) + ' em recebimentos previstos. O saldo projetado para o fim do dia é ' + dinheiro(projetado) + '.';
-    document.getElementById('homeDia').textContent =
-        'Hoje, ' + new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long'}) +
-        ': ' + pagarHoje.length + ' pagamento(s) previsto(s) e ' +
-        receberHoje.length + ' recebimento(s) previsto(s).';
-    document.getElementById('homeProjecao').textContent = dinheiro(projetado);
-
-    const insight = entradas === 0 && saidas === 0
-        ? 'Sua empresa ainda não possui movimentações financeiras registradas neste mês.'
-        : saidas > entradas
-            ? 'Atenção: as despesas do mês estão maiores que as receitas registradas.'
-            : 'Seu fluxo financeiro está dentro do esperado até o momento.';
-    document.getElementById('homeInsights').textContent = insight;
-}
-
-/* ANÁLISES DE VENDAS */
-
-async function carregarAnalises() {
-    if (!empresaAtual) return;
+    const baseSemana = new Date(hoje + 'T12:00:00');
+    const fimSemanaData = new Date(baseSemana);
+    fimSemanaData.setDate(baseSemana.getDate() + (7 - baseSemana.getDay()) % 7);
+    const fimSemana = fimSemanaData.toISOString().split('T')[0];
 
     const ano = Number(document.getElementById('anoSelect').value);
     const mes = Number(document.getElementById('mesSelect').value);
-    const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
-    const fim = new Date(ano, mes, 0).toISOString().split('T')[0];
+    const mesMeta = `${ano}-${String(mes).padStart(2, '0')}-01`;
 
-    const { data, error } = await supabaseClient
-        .from('lancamentos')
-        .select('descricao,tipo,origem')
-        .eq('cliente_id', empresaAtual)
-        .eq('tipo', 'entrada')
-        .gte('data', inicio)
-        .lte('data', fim);
+    const [pagar, receber, metaResposta] = await Promise.all([
+        supabaseClient.from('contas_pagar').select('valor,vencimento').eq('cliente_id', empresaAtual),
+        supabaseClient.from('contas_receber').select('valor,vencimento').eq('cliente_id', empresaAtual),
+        supabaseClient.from('metas').select('meta_faturamento').eq('cliente_id', empresaAtual).eq('mes', mesMeta).maybeSingle()
+    ]);
 
-    if (error) {
-        console.error(error);
-        return;
-    }
+    const pagamentosSemana = (pagar.data || []).filter(item => item.vencimento >= hoje && item.vencimento <= fimSemana)
+        .reduce((soma, item) => soma + Number(item.valor || 0), 0);
+    const recebimentosSemana = (receber.data || []).filter(item => item.vencimento >= hoje && item.vencimento <= fimSemana)
+        .reduce((soma, item) => soma + Number(item.valor || 0), 0);
+    const entradasHoje = (lancamentos || []).filter(item => item.tipo === 'entrada' && item.data === hoje)
+        .reduce((soma, item) => soma + Number(item.valor || 0), 0);
 
-    const totais = new Map();
+    const diasNoMes = new Date(ano, mes, 0).getDate();
+    const agora = new Date();
+    const diasDecorridos = agora.getFullYear() === ano && agora.getMonth() + 1 === mes ? Math.max(1, agora.getDate()) : diasNoMes;
+    const projetadoMeta = entradas > 0 ? (entradas / diasDecorridos) * diasNoMes : Number(metaResposta.data?.meta_faturamento || 0);
 
-    (data || []).forEach(lancamento => {
-        if (lancamento.origem !== 'produtos') return;
+    document.getElementById('homeHoje').textContent = dinheiro(entradasHoje);
+    document.getElementById('homePagamentosSemana').textContent = dinheiro(pagamentosSemana);
+    document.getElementById('homeRecebimentosSemana').textContent = dinheiro(recebimentosSemana);
+    document.getElementById('homeProjetadoMeta').textContent = dinheiro(projetadoMeta);
 
-        const itens = String(lancamento.descricao || '')
-            .split('·')[0]
-            .split(',');
-
-        itens.forEach(item => {
-            const encontrado = item.trim().match(/^(\d+(?:[.,]\d+)?)x\s+(.+)$/i);
-            if (!encontrado) return;
-
-            const quantidade = Number(encontrado[1].replace(',', '.'));
-            const nome = encontrado[2].trim();
-            if (!Number.isFinite(quantidade) || !nome) return;
-
-            const chave = nome.toLocaleLowerCase('pt-BR');
-            const atual = totais.get(chave) || { nome, quantidade: 0 };
-            atual.quantidade += quantidade;
-            totais.set(chave, atual);
-        });
-    });
-
-    const ranking = [...totais.values()]
-        .sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'));
-
-    const tabela = document.getElementById('analiseProdutosTabela');
-    tabela.innerHTML = '';
-
-    if (!ranking.length) {
-        document.getElementById('analiseResumo').textContent =
-            'Ainda não há vendas de produtos registradas no período selecionado.';
-        document.getElementById('analiseMaisVendido').textContent = '—';
-        document.getElementById('analiseSaborMaisVendido').textContent = '—';
-        tabela.innerHTML = '<tr><td colspan="2">Nenhuma venda de produto encontrada.</td></tr>';
-        return;
-    }
-
-    const totalItens = ranking.reduce((soma, item) => soma + item.quantidade, 0);
-    const maisVendido = ranking[0];
-
-    document.getElementById('analiseResumo').textContent =
-        'No período selecionado, foram vendidos ' + totalItens +
-        ' item(ns). Veja abaixo o que mais saiu nas vendas.';
-    document.getElementById('analiseMaisVendido').textContent =
-        maisVendido.nome + ' (' + maisVendido.quantidade + ')';
-
-    const sabores = ranking
-        .filter(item => /^pizza(?:\s+de)?\s+/i.test(item.nome))
-        .map(item => ({
-            nome: item.nome.replace(/^pizza(?:\s+de)?\s+/i, ''),
-            quantidade: item.quantidade
-        }))
-        .sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'));
-
-    document.getElementById('analiseSaborMaisVendido').textContent =
-        sabores.length ? sabores[0].nome + ' (' + sabores[0].quantidade + ')' : 'Sem pizzas no período';
-
-    ranking.slice(0, 10).forEach(item => {
-        const linha = document.createElement('tr');
-        const produto = document.createElement('td');
-        const quantidade = document.createElement('td');
-        produto.textContent = item.nome;
-        quantidade.textContent = item.quantidade;
-        linha.append(produto, quantidade);
-        tabela.appendChild(linha);
-    });
+    document.getElementById('homeInsights').textContent =
+        entradas === 0 && saidas === 0 ? 'Sua empresa ainda não possui movimentações financeiras registradas neste mês.'
+        : saidas > entradas ? 'Atenção: as despesas do mês estão maiores que as receitas registradas.'
+        : 'Seu fluxo financeiro está dentro do esperado até o momento.';
 }
-
-
 /* WHATSAPP */
 
 async function atualizarNotificacoesWhatsApp() {
@@ -2292,9 +2186,9 @@ async function carregarSaldo() {
     });
 
 
-    document.getElementById(
-        'saldo'
-    ).textContent = dinheiro(saldo);
+    const saldoElemento = document.getElementById('saldo');
+    if (saldoElemento) saldoElemento.textContent = dinheiro(saldo);
+    return saldo;
 
 }
 
