@@ -457,6 +457,159 @@ td {
     display: none;
 }
 
+/* IDENTIDADE VISUAL */
+:root {
+    --vinho-escuro: #561C24;
+    --vinho: #6D2932;
+    --vinho-claro: #C7B7A3;
+    --areia: #E8D8C4;
+    --fundo: #F7F1E9;
+    --texto: #3E1E23;
+    --texto-suave: #735A57;
+    --briston: "Briston", Georgia, "Times New Roman", serif;
+    --pierson: "Pierson", Arial, Helvetica, sans-serif;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+.sidebar {
+    background: #fffaf4;
+    border-right-color: #dfcfbd;
+}
+
+.logo {
+    color: var(--vinho-escuro);
+}
+
+.menu button {
+    font-family: var(--pierson);
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--vinho-escuro);
+}
+
+.menu button:hover {
+    background: var(--areia);
+}
+
+.menu button.active {
+    background: var(--areia);
+    color: var(--vinho-escuro);
+}
+
+.section-title {
+    color: #92746b;
+    font-family: var(--pierson);
+    font-size: 11px;
+}
+
+.topbar h1 {
+    color: var(--vinho-escuro);
+}
+
+#pagina-home .home-saudacao h2,
+#pagina-home .home-destaque h2,
+#pagina-home .panel-header h2 {
+    font-family: var(--briston);
+    font-weight: 700;
+    color: var(--vinho-escuro);
+}
+
+#pagina-home .home-saudacao h2 {
+    font-size: 34px;
+}
+
+.home-destaque {
+    background: #efe4d4;
+    border-color: #d7c5ad;
+}
+
+.home-destaque p,
+.home-saudacao p,
+.home-conteudo,
+.topbar p {
+    color: var(--texto-suave);
+}
+
+.card,
+.panel,
+.login-card,
+.modal {
+    border-color: #dfcfbd;
+    box-shadow: 0 10px 30px rgba(86, 28, 36, .05);
+}
+
+.card-title {
+    color: var(--texto-suave);
+}
+
+.card-value,
+.home-projecao,
+.green,
+.blue {
+    color: var(--vinho-escuro);
+}
+
+.red,
+.status-estoque-baixo {
+    color: #9f303b;
+}
+
+.btn {
+    background: var(--vinho);
+    color: #fffaf4;
+}
+
+.btn:hover {
+    background: var(--vinho-escuro);
+}
+
+.btn-secondary {
+    background: var(--areia);
+    color: var(--vinho-escuro);
+}
+
+input,
+select {
+    border-color: #d7c5ad;
+    background: #fffdf9;
+    color: var(--texto);
+}
+
+input:focus,
+select:focus {
+    outline: 2px solid #c7b7a3;
+    border-color: var(--vinho);
+}
+
+.logout-btn {
+    border-color: #dfcfbd;
+    color: var(--vinho-escuro);
+    background: #fffaf4;
+}
+
+.logout-btn:hover {
+    background: var(--areia);
+}
+
+.login-logo,
+.login-card h2 {
+    color: var(--vinho-escuro);
+}
+
+.login-logo span,
+.logo span {
+    color: var(--vinho) !important;
+}
+
+.login-link {
+    color: var(--vinho);
+}
+
 </style>
 </head>
 
