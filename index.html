@@ -116,6 +116,16 @@ input {
 }
 
 /* CARDS */
+.home-saudacao { margin-bottom: 22px; }
+.home-saudacao h2 { font-size: 28px; margin: 5px 0; }
+.home-saudacao p { color: #6b7280; }
+.home-destaque { background: #eef2ff; border: 1px solid #dbe4ff; border-radius: 14px; padding: 20px 22px; margin-bottom: 22px; }
+.home-destaque h2 { font-size: 18px; margin-bottom: 8px; }
+.home-destaque p, .home-conteudo { color: #4b5563; line-height: 1.55; padding: 18px 22px; }
+.home-grid { display:grid; grid-template-columns: 1.3fr 1fr; gap:18px; margin-bottom:25px; }
+.home-projecao { font-size:30px; font-weight:700; color:#2563eb; padding:18px 22px 0; }
+.acoes-rapidas { padding: 18px 22px; display:flex; gap:10px; flex-wrap:wrap; }
+@media(max-width: 900px) { .home-grid { grid-template-columns: 1fr; } }
 .cards {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -628,76 +638,37 @@ td {
 
 
         <section id="pagina-dashboard">
+    <div class="home-saudacao">
+        <p id="homeData"></p>
+        <h2 id="homeSaudacao">Olá 👋</h2>
+        <p>Aqui está o resumo financeiro da sua empresa hoje.</p>
+    </div>
 
-            <div class="cards">
+    <div class="home-destaque">
+        <h2>Seu resumo financeiro de hoje</h2>
+        <p id="homeResumo">Carregando resumo financeiro...</p>
+    </div>
 
-                <div class="card">
-                    <div class="card-title">Faturamento</div>
-                    <div class="card-value green" id="faturamento">R$ 0,00</div>
-                </div>
+    <div class="cards">
+        <div class="card"><div class="card-title">Saldo atual</div><div class="card-value blue" id="saldo">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">Receitas do mês</div><div class="card-value green" id="faturamento">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">Despesas do mês</div><div class="card-value red" id="despesas">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">Resultado do mês</div><div class="card-value blue" id="resultado">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">A receber</div><div class="card-value green" id="totalReceber">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">A pagar</div><div class="card-value red" id="totalPagar">R$ 0,00</div></div>
+    </div>
 
-                <div class="card">
-                    <div class="card-title">Despesas</div>
-                    <div class="card-value red" id="despesas">R$ 0,00</div>
-                </div>
+    <div class="home-grid">
+        <div class="panel"><div class="panel-header"><h2>Seu dia financeiro</h2></div><div class="home-conteudo" id="homeDia">Carregando...</div></div>
+        <div class="panel"><div class="panel-header"><h2>Saldo projetado ao final do dia</h2></div><div class="home-projecao" id="homeProjecao">R$ 0,00</div><p class="home-conteudo">Estimativa baseada nos vencimentos de hoje.</p></div>
+    </div>
 
-                <div class="card">
-                    <div class="card-title">Resultado</div>
-                    <div class="card-value blue" id="resultado">R$ 0,00</div>
-                </div>
+    <div class="panel"><div class="panel-header"><h2>Ações rápidas</h2></div>
+        <div class="acoes-rapidas"><button class="btn" onclick="abrirModalLancamento()">+ Novo lançamento</button><button class="btn btn-secondary" onclick="abrirPagina('receber', document.querySelector('.menu button[onclick*=receber]'))">Contas a receber</button><button class="btn btn-secondary" onclick="abrirPagina('pagar', document.querySelector('.menu button[onclick*=pagar]'))">Contas a pagar</button></div>
+    </div>
 
-                <div class="card">
-                    <div class="card-title">Margem</div>
-                    <div class="card-value" id="margem">0%</div>
-                </div>
-
-            </div>
-
-
-            <div class="panel">
-
-                <div class="panel-header">
-                    <h2>Resumo financeiro</h2>
-                </div>
-
-                <table>
-
-                    <thead>
-                        <tr>
-                            <th>Indicador</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        <tr>
-                            <td>Saldo disponível</td>
-                            <td id="saldo">R$ 0,00</td>
-                        </tr>
-
-                        <tr>
-                            <td>Contas a pagar</td>
-                            <td id="totalPagar">R$ 0,00</td>
-                        </tr>
-
-                        <tr>
-                            <td>Contas a receber</td>
-                            <td id="totalReceber">R$ 0,00</td>
-                        </tr>
-
-                        <tr>
-                            <td>Meta de faturamento</td>
-                            <td id="metaFaturamento">R$ 0,00</td>
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </section>
+    <div class="panel"><div class="panel-header"><h2>AD Insights</h2></div><div class="home-conteudo" id="homeInsights">Carregando insights...</div></div>
+</section>
 
 
         <section id="pagina-fluxo" class="hidden">
@@ -1604,9 +1575,58 @@ async function carregarDashboard() {
     await carregarContasReceber();
 
     await carregarMeta();
+    await atualizarHomeFinanceira(entradas, saidas);
 
 }
 
+
+async function atualizarHomeFinanceira(entradas, saidas) {
+    const hoje = new Date().toISOString().split('T')[0];
+    const nome = usuarioAtual?.user_metadata?.nome ||
+        usuarioAtual?.user_metadata?.name ||
+        usuarioAtual?.email?.split('@')[0]?.split(/[._-]/)[0] || 'usuário';
+    const hora = new Date().getHours();
+    const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+
+    document.getElementById('homeSaudacao').textContent =
+        saudacao + ', ' + nome.charAt(0).toUpperCase() + nome.slice(1) + ' 👋';
+    document.getElementById('homeData').textContent =
+        new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+
+    const [pagar, receber] = await Promise.all([
+        supabaseClient.from('contas_pagar').select('valor,vencimento').eq('cliente_id', empresaAtual),
+        supabaseClient.from('contas_receber').select('valor,vencimento').eq('cliente_id', empresaAtual)
+    ]);
+    const pagamentos = pagar.data || [], recebimentos = receber.data || [];
+    const totalPagar = pagamentos.reduce((s, i) => s + Number(i.valor || 0), 0);
+    const totalReceber = recebimentos.reduce((s, i) => s + Number(i.valor || 0), 0);
+    document.getElementById('totalPagar').textContent = dinheiro(totalPagar);
+    document.getElementById('totalReceber').textContent = dinheiro(totalReceber);
+
+    const pagarHoje = pagamentos.filter(i => i.vencimento === hoje);
+    const receberHoje = recebimentos.filter(i => i.vencimento === hoje);
+    const vp = pagarHoje.reduce((s,i)=>s+Number(i.valor||0),0);
+    const vr = receberHoje.reduce((s,i)=>s+Number(i.valor||0),0);
+    const saldoTexto = document.getElementById('saldo').textContent;
+    const saldoNumero = Number(saldoTexto.replace(/[^0-9,-]/g,'').replace('.','').replace(',','.')) || 0;
+    const projetado = saldoNumero + vr - vp;
+
+    document.getElementById('homeResumo').textContent =
+        'Hoje há ' + dinheiro(vp) + ' em pagamentos previstos e ' +
+        dinheiro(vr) + ' em recebimentos previstos. O saldo projetado para o fim do dia é ' + dinheiro(projetado) + '.';
+    document.getElementById('homeDia').textContent =
+        'Hoje, ' + new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long'}) +
+        ': ' + pagarHoje.length + ' pagamento(s) previsto(s) e ' +
+        receberHoje.length + ' recebimento(s) previsto(s).';
+    document.getElementById('homeProjecao').textContent = dinheiro(projetado);
+
+    const insight = entradas === 0 && saidas === 0
+        ? 'Sua empresa ainda não possui movimentações financeiras registradas neste mês.'
+        : saidas > entradas
+            ? 'Atenção: as despesas do mês estão maiores que as receitas registradas.'
+            : 'Seu fluxo financeiro está dentro do esperado até o momento.';
+    document.getElementById('homeInsights').textContent = insight;
+}
 
 /* SALDO */
 
