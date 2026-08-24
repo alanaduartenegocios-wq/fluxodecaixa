@@ -720,6 +720,10 @@ select:focus {
                 📊 Dashboard
             </button>
 
+            <button onclick="abrirPagina('analises', this)">
+                📈 Análises
+            </button>
+
             <button onclick="abrirPagina('fluxo', this)">
                 💰 Fluxo de Caixa
             </button>
@@ -852,6 +856,33 @@ select:focus {
     <div class="panel"><div class="panel-header"><h2>AD Insights</h2></div><div class="home-conteudo" id="homeInsights">Carregando insights...</div></div>
 </section>
 
+
+
+        <section id="pagina-analises" class="hidden">
+            <div class="home-destaque">
+                <h2>Análises de vendas</h2>
+                <p id="analiseResumo">Selecione uma empresa para consultar as vendas.</p>
+            </div>
+
+            <div class="cards">
+                <div class="card">
+                    <div class="card-title">Produto mais vendido</div>
+                    <div class="card-value" id="analiseMaisVendido">—</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Sabor de pizza mais vendido</div>
+                    <div class="card-value" id="analiseSaborMaisVendido">—</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header"><h2>Produtos mais vendidos</h2></div>
+                <table>
+                    <thead><tr><th>Produto</th><th>Quantidade vendida</th></tr></thead>
+                    <tbody id="analiseProdutosTabela"></tbody>
+                </table>
+            </div>
+        </section>
 
         <section id="pagina-fluxo" class="hidden">
 
@@ -1597,6 +1628,11 @@ function abrirPagina(pagina, botao) {
             'Visão geral financeira'
         ],
 
+        analises: [
+            'Análises',
+            'Leitura das vendas e dos sabores mais vendidos'
+        ],
+
         fluxo: [
             'Fluxo de Caixa',
             'Controle diário das movimentações'
@@ -1649,6 +1685,7 @@ function abrirPagina(pagina, botao) {
 
     if (pagina === 'produtos') carregarProdutos();
     if (pagina === 'estoque') carregarEstoque();
+    if (pagina === 'analises') carregarAnalises();
 
 }
 
@@ -1817,6 +1854,99 @@ async function atualizarHomeFinanceira(entradas, saidas) {
             ? 'Atenção: as despesas do mês estão maiores que as receitas registradas.'
             : 'Seu fluxo financeiro está dentro do esperado até o momento.';
     document.getElementById('homeInsights').textContent = insight;
+}
+
+/* ANÁLISES DE VENDAS */
+
+async function carregarAnalises() {
+    if (!empresaAtual) return;
+
+    const ano = Number(document.getElementById('anoSelect').value);
+    const mes = Number(document.getElementById('mesSelect').value);
+    const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
+    const fim = new Date(ano, mes, 0).toISOString().split('T')[0];
+
+    const { data, error } = await supabaseClient
+        .from('lancamentos')
+        .select('descricao,tipo,origem')
+        .eq('cliente_id', empresaAtual)
+        .eq('tipo', 'entrada')
+        .gte('data', inicio)
+        .lte('data', fim);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const totais = new Map();
+
+    (data || []).forEach(lancamento => {
+        if (lancamento.origem !== 'produtos') return;
+
+        const itens = String(lancamento.descricao || '')
+            .split('·')[0]
+            .split(',');
+
+        itens.forEach(item => {
+            const encontrado = item.trim().match(/^(\d+(?:[.,]\d+)?)x\s+(.+)$/i);
+            if (!encontrado) return;
+
+            const quantidade = Number(encontrado[1].replace(',', '.'));
+            const nome = encontrado[2].trim();
+            if (!Number.isFinite(quantidade) || !nome) return;
+
+            const chave = nome.toLocaleLowerCase('pt-BR');
+            const atual = totais.get(chave) || { nome, quantidade: 0 };
+            atual.quantidade += quantidade;
+            totais.set(chave, atual);
+        });
+    });
+
+    const ranking = [...totais.values()]
+        .sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'));
+
+    const tabela = document.getElementById('analiseProdutosTabela');
+    tabela.innerHTML = '';
+
+    if (!ranking.length) {
+        document.getElementById('analiseResumo').textContent =
+            'Ainda não há vendas de produtos registradas no período selecionado.';
+        document.getElementById('analiseMaisVendido').textContent = '—';
+        document.getElementById('analiseSaborMaisVendido').textContent = '—';
+        tabela.innerHTML = '<tr><td colspan="2">Nenhuma venda de produto encontrada.</td></tr>';
+        return;
+    }
+
+    const totalItens = ranking.reduce((soma, item) => soma + item.quantidade, 0);
+    const maisVendido = ranking[0];
+
+    document.getElementById('analiseResumo').textContent =
+        'No período selecionado, foram vendidos ' + totalItens +
+        ' item(ns). Veja abaixo o que mais saiu nas vendas.';
+    document.getElementById('analiseMaisVendido').textContent =
+        maisVendido.nome + ' (' + maisVendido.quantidade + ')';
+
+    const sabores = ranking
+        .filter(item => /^pizza(?:\s+de)?\s+/i.test(item.nome))
+        .map(item => ({
+            nome: item.nome.replace(/^pizza(?:\s+de)?\s+/i, ''),
+            quantidade: item.quantidade
+        }))
+        .sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'));
+
+    document.getElementById('analiseSaborMaisVendido').textContent =
+        sabores.length ? sabores[0].nome + ' (' + sabores[0].quantidade + ')' : 'Sem pizzas no período';
+
+    ranking.slice(0, 10).forEach(item => {
+        const linha = document.createElement('tr');
+        const produto = document.createElement('td');
+        const quantidade = document.createElement('td');
+        produto.textContent = item.nome;
+        quantidade.textContent = item.quantidade;
+        linha.append(produto, quantidade);
+        tabela.appendChild(linha);
+    });
 }
 
 /* SALDO */
