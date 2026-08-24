@@ -549,8 +549,12 @@ td {
 
         <div class="menu">
 
-            <button class="active" onclick="abrirPagina('dashboard', this)">
-                🏠 Dashboard
+            <button class="active" onclick="abrirPagina('home', this)">
+                🏠 Home Financeira
+            </button>
+
+            <button onclick="abrirPagina('dashboard', this)">
+                📊 Dashboard
             </button>
 
             <button onclick="abrirPagina('fluxo', this)">
@@ -601,8 +605,8 @@ td {
         <div class="topbar">
 
             <div>
-                <h1 id="tituloPagina">Dashboard</h1>
-                <p id="subtituloPagina">Visão geral financeira</p>
+                <h1 id="tituloPagina">Home Financeira</h1>
+                <p id="subtituloPagina">Seu resumo financeiro de hoje</p>
             </div>
 
             <div class="selects">
@@ -637,7 +641,22 @@ td {
         </div>
 
 
-        <section id="pagina-dashboard">
+        <section id="pagina-dashboard" class="hidden">
+    <div class="panel">
+        <div class="panel-header"><h2>Dashboard</h2></div>
+        <div class="home-conteudo">
+            Acompanhe os indicadores do mês selecionado.
+        </div>
+    </div>
+    <div class="cards">
+        <div class="card"><div class="card-title">Receitas do mês</div><div class="card-value green" id="dashFaturamento">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">Despesas do mês</div><div class="card-value red" id="dashDespesas">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">Resultado do mês</div><div class="card-value blue" id="dashResultado">R$ 0,00</div></div>
+        <div class="card"><div class="card-title">Margem do mês</div><div class="card-value blue" id="margem">0,0%</div></div>
+    </div>
+</section>
+
+<section id="pagina-home">
     <div class="home-saudacao">
         <p id="homeData"></p>
         <h2 id="homeSaudacao">Olá 👋</h2>
@@ -1405,6 +1424,11 @@ function abrirPagina(pagina, botao) {
 
     const nomes = {
 
+        home: [
+            'Home Financeira',
+            'Seu resumo financeiro de hoje'
+        ],
+
         dashboard: [
             'Dashboard',
             'Visão geral financeira'
@@ -1541,13 +1565,19 @@ async function carregarDashboard() {
         'faturamento'
     ).textContent = dinheiro(entradas);
 
+    document.getElementById('dashFaturamento').textContent = dinheiro(entradas);
+
     document.getElementById(
         'despesas'
     ).textContent = dinheiro(saidas);
 
+    document.getElementById('dashDespesas').textContent = dinheiro(saidas);
+
     document.getElementById(
         'resultado'
     ).textContent = dinheiro(resultado);
+
+    document.getElementById('dashResultado').textContent = dinheiro(resultado);
 
     document.getElementById(
         'margem'
