@@ -934,8 +934,24 @@ td {
 </div>
 
         <div class="form-group">
-            <label>Conta</label>
-            <select id="lancConta"></select>
+            <label for="lancFormaPagamento">Forma de pagamento</label>
+            <select id="lancFormaPagamento" onchange="atualizarFormaPagamento()">
+                <option value="pix">Pix</option>
+                <option value="stone_debito">Máquina de cartão — Débito</option>
+                <option value="stone_credito">Máquina de cartão — Crédito</option>
+                <option value="dinheiro">Dinheiro</option>
+            </select>
+        </div>
+
+        <div class="form-group hidden" id="grupoTaxaStone">
+            <label for="lancTaxaStone">Taxa Stone (%)</label>
+            <input type="number" id="lancTaxaStone" min="0" step="0.01"
+                   value="0" oninput="renderizarItensLancamento()">
+        </div>
+
+        <div class="form-group">
+            <label for="lancSubtotal">Subtotal dos itens</label>
+            <input type="number" id="lancSubtotal" step="0.01" readonly>
         </div>
 
         <div class="modal-actions">
@@ -1702,9 +1718,10 @@ async function abrirModalLancamento() {
     document.getElementById('lancProduto').value = '';
     document.getElementById('lancQuantidade').value = 1;
     itensLancamento = [];
-    renderizarItensLancamento();
+    document.getElementById('lancFormaPagamento').value = 'pix';
+    document.getElementById('lancTaxaStone').value = 0;
+    atualizarFormaPagamento();
 
-    await carregarContasLancamento();
     await carregarProdutosLancamento();
 }
 
@@ -1800,6 +1817,31 @@ function removerItemLancamento(produtoId) {
     renderizarItensLancamento();
 }
 
+function atualizarFormaPagamento() {
+    const forma = document.getElementById('lancFormaPagamento').value;
+    const usaStone = forma === 'stone_debito' || forma === 'stone_credito';
+    const grupoTaxa = document.getElementById('grupoTaxaStone');
+
+    grupoTaxa.classList.toggle('hidden', !usaStone);
+
+    if (!usaStone) {
+        document.getElementById('lancTaxaStone').value = 0;
+    }
+
+    renderizarItensLancamento();
+}
+
+function rotuloFormaPagamento(forma) {
+    const formas = {
+        pix: 'Pix',
+        stone_debito: 'Stone — Débito',
+        stone_credito: 'Stone — Crédito',
+        dinheiro: 'Dinheiro'
+    };
+
+    return formas[forma] || forma;
+}
+
 function renderizarItensLancamento() {
     const lista = document.getElementById('itensLancamento');
     lista.innerHTML = '';
@@ -1835,12 +1877,21 @@ function renderizarItensLancamento() {
     const descricao = itensLancamento
         .map(item => `${item.quantidade}x ${item.nome}`)
         .join(', ');
-    const total = itensLancamento.reduce(
+    const subtotal = itensLancamento.reduce(
         (soma, item) => soma + item.preco * item.quantidade,
         0
     );
 
+    const forma = document.getElementById('lancFormaPagamento').value;
+    const usaStone = forma === 'stone_debito' || forma === 'stone_credito';
+    const taxa = usaStone
+        ? Math.max(0, Number(document.getElementById('lancTaxaStone').value) || 0)
+        : 0;
+    const total = subtotal * (1 + taxa / 100);
+
     document.getElementById('lancDescricao').value = descricao;
+    document.getElementById('lancSubtotal').value =
+        subtotal ? subtotal.toFixed(2) : '';
     document.getElementById('lancValor').value =
         total ? total.toFixed(2) : '';
 }
@@ -1886,14 +1937,24 @@ async function carregarContasLancamento() {
 async function salvarLancamento() {
     const data = document.getElementById('lancData').value;
     const tipo = document.getElementById('lancTipo').value;
-    const conta = document.getElementById('lancConta').value;
-    const descricao = document.getElementById('lancDescricao').value.trim();
+    const formaPagamento = document.getElementById('lancFormaPagamento').value;
+    const usaStone =
+        formaPagamento === 'stone_debito' ||
+        formaPagamento === 'stone_credito';
+    const taxa = usaStone
+        ? Math.max(0, Number(document.getElementById('lancTaxaStone').value) || 0)
+        : 0;
+    const descricaoItens = document.getElementById('lancDescricao').value.trim();
     const valor = Number(document.getElementById('lancValor').value);
 
-    if (!data || !itensLancamento.length || !descricao || !valor) {
+    if (!data || !itensLancamento.length || !descricaoItens || !valor) {
         alert('Adicione pelo menos um produto ao lançamento.');
         return;
     }
+
+    const descricao =
+        `${descricaoItens} · ${rotuloFormaPagamento(formaPagamento)}` +
+        (usaStone ? ` · taxa Stone ${taxa.toFixed(2)}%` : '');
 
     const { error } = await supabaseClient
         .from('lancamentos')
@@ -1903,7 +1964,8 @@ async function salvarLancamento() {
             tipo,
             descricao,
             valor,
-            conta_id: conta || null,
+            forma_pagamento: formaPagamento,
+            taxa_percentual: taxa,
             origem: 'produtos'
         });
 
@@ -1918,7 +1980,6 @@ async function salvarLancamento() {
     await carregarDashboard();
     await carregarFluxo();
 }
-
 
 /* CONTAS A PAGAR */
 
