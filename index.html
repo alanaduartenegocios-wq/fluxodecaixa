@@ -267,6 +267,31 @@ td {
     display: none !important;
 }
 
+.itens-lancamento {
+    margin: 16px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    overflow: hidden;
+}
+.item-lancamento {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.item-lancamento:last-child {
+    border-bottom: 0;
+}
+.item-lancamento-nome {
+    flex: 1;
+}
+.item-lancamento-vazio {
+    padding: 12px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
 /* RESPONSIVO */
 @media(max-width: 900px) {
 
@@ -881,24 +906,30 @@ td {
 </div>
 
 <div class="form-group">
-    <label>Produto</label>
-    <select id="lancProduto" onchange="preencherDadosProduto()">
+    <label for="lancProduto">Produto</label>
+    <select id="lancProduto">
         <option value="">Selecionar produto</option>
     </select>
 </div>
 
 <div class="form-group">
-    <label>Quantidade</label>
-    <input type="number" id="lancQuantidade" min="1" step="1" value="1" oninput="preencherDadosProduto()">
+    <label for="lancQuantidade">Quantidade</label>
+    <input type="number" id="lancQuantidade" min="1" step="1" value="1">
 </div>
 
+<button type="button" class="btn" onclick="adicionarItemLancamento()">
+    + Adicionar item
+</button>
+
+<div id="itensLancamento" class="itens-lancamento" aria-live="polite"></div>
+
 <div class="form-group">
-    <label>Descrição</label>
+    <label for="lancDescricao">Descrição do lançamento</label>
     <input type="text" id="lancDescricao" readonly>
 </div>
 
 <div class="form-group">
-    <label>Valor total</label>
+    <label for="lancValor">Valor total</label>
     <input type="number" id="lancValor" step="0.01" readonly>
 </div>
 
@@ -1660,36 +1691,22 @@ async function carregarFluxo() {
 async function abrirModalLancamento() {
 
     if (!empresaAtual) {
-
-        alert(
-            'Selecione uma empresa primeiro.'
-        );
-
+        alert('Selecione uma empresa primeiro.');
         return;
     }
 
+    document.getElementById('modalLancamento').style.display = 'flex';
 
-    document.getElementById(
-        'modalLancamento'
-    ).style.display = 'flex';
-
-
-    const hoje =
+    document.getElementById('lancData').value =
         new Date().toISOString().split('T')[0];
-
-    document.getElementById(
-        'lancData'
-    ).value = hoje;
-
     document.getElementById('lancProduto').value = '';
     document.getElementById('lancQuantidade').value = 1;
-    document.getElementById('lancDescricao').value = '';
-    document.getElementById('lancValor').value = '';
+    itensLancamento = [];
+    renderizarItensLancamento();
 
     await carregarContasLancamento();
     await carregarProdutosLancamento();
 }
-
 
 function fecharModalLancamento() {
 
@@ -1701,135 +1718,131 @@ function fecharModalLancamento() {
 
 
 /* PRODUTOS DO LANÇAMENTO */
-async function carregarProdutosLancamento() {
+let produtosLancamento = [];
+let itensLancamento = [];
 
+async function carregarProdutosLancamento() {
     const select = document.getElementById('lancProduto');
 
-    if (!select) {
-        console.error('Campo #lancProduto não existe.');
-        return;
-    }
-
     if (!empresaAtual) {
-        select.innerHTML =
-            '<option value="">Selecione uma empresa primeiro</option>';
+        select.innerHTML = '<option value="">Selecione uma empresa primeiro</option>';
         return;
     }
 
     select.disabled = true;
-    select.innerHTML =
-        '<option value="">Carregando produtos...</option>';
+    select.innerHTML = '<option value="">Carregando produtos...</option>';
 
-    console.log(
-        '[Fluxo+] Buscando produtos da empresa:',
-        empresaAtual
-    );
-
-    const { data: produtos, error } =
-        await supabaseClient
-            .from('produtos')
-            .select('id,nome,preco_venda,ativo,cliente_id')
-            .eq('cliente_id', empresaAtual)
-            .eq('ativo', true)
-            .order('nome', { ascending: true });
+    const { data: produtos, error } = await supabaseClient
+        .from('produtos')
+        .select('id,nome,preco_venda')
+        .eq('cliente_id', empresaAtual)
+        .eq('ativo', true)
+        .order('nome', { ascending: true });
 
     if (error) {
-
-        console.error(
-            '[Fluxo+] ERRO AO BUSCAR PRODUTOS:',
-            error
-        );
-
-        select.innerHTML =
-            '<option value="">Erro de permissão ao carregar produtos</option>';
-
-        select.disabled = false;
-
-        alert(
-            'O banco encontrou um bloqueio ao consultar os produtos. ' +
-            'Vamos corrigir a política RLS da tabela produtos.'
-        );
-
-        return;
-    }
-
-    select.innerHTML =
-        '<option value="">Selecionar produto</option>';
-
-    if (!produtos || produtos.length === 0) {
-
-        console.warn(
-            '[Fluxo+] Nenhum produto retornado para:',
-            empresaAtual
-        );
-
-        select.innerHTML =
-            '<option value="">Nenhum produto cadastrado</option>';
-
+        console.error('[Fluxo+] Erro ao buscar produtos:', error);
+        select.innerHTML = '<option value="">Não foi possível carregar os produtos</option>';
         select.disabled = false;
         return;
     }
 
-    produtos.forEach(produto => {
+    produtosLancamento = produtos || [];
+    select.innerHTML = '<option value="">Selecionar produto</option>';
 
-        const option =
-            document.createElement('option');
-
+    produtosLancamento.forEach(produto => {
+        const option = document.createElement('option');
         option.value = produto.id;
-
-        option.textContent =
-            `${produto.nome} — ${dinheiro(produto.preco_venda)}`;
-
-        option.dataset.preco =
-            produto.preco_venda;
-
-        option.dataset.nome =
-            produto.nome;
-
+        option.textContent = `${produto.nome} — ${dinheiro(produto.preco_venda)}`;
         select.appendChild(option);
     });
 
-    select.disabled = false;
+    if (!produtosLancamento.length) {
+        select.innerHTML = '<option value="">Nenhum produto cadastrado</option>';
+    }
 
-    console.log(
-        `[Fluxo+] ${produtos.length} produtos carregados com sucesso.`
-    );
+    select.disabled = false;
 }
 
-/* PREENCHER DADOS DO PRODUTO */
-
-async function preencherDadosProduto() {
-    
+function adicionarItemLancamento() {
     const produtoId = document.getElementById('lancProduto').value;
-    const quantidade = Number(
-        document.getElementById('lancQuantidade').value
-    ) || 1;
+    const quantidade = Number(document.getElementById('lancQuantidade').value);
 
-    if (!produtoId) {
-        document.getElementById('lancDescricao').value = '';
-        document.getElementById('lancValor').value = '';
+    if (!produtoId || !Number.isFinite(quantidade) || quantidade <= 0) {
+        alert('Selecione um produto e informe uma quantidade válida.');
         return;
     }
 
-    const { data: produto, error } = await supabaseClient
-        .from('produtos')
-        .select('id, nome, preco_venda')
-        .eq('id', produtoId)
-        .single();
-
-    if (error || !produto) {
-        console.error(error);
+    const produto = produtosLancamento.find(item => item.id === produtoId);
+    if (!produto) {
+        alert('Produto não encontrado. Atualize a tela e tente novamente.');
         return;
     }
 
-    document.getElementById('lancDescricao').value =
-        produto.nome;
+    const existente = itensLancamento.find(item => item.id === produto.id);
+    if (existente) {
+        existente.quantidade += quantidade;
+    } else {
+        itensLancamento.push({
+            id: produto.id,
+            nome: produto.nome,
+            preco: Number(produto.preco_venda),
+            quantidade
+        });
+    }
 
-    const valorTotal =
-        Number(produto.preco_venda) * quantidade;
+    document.getElementById('lancProduto').value = '';
+    document.getElementById('lancQuantidade').value = 1;
+    renderizarItensLancamento();
+}
 
+function removerItemLancamento(produtoId) {
+    itensLancamento = itensLancamento.filter(item => item.id !== produtoId);
+    renderizarItensLancamento();
+}
+
+function renderizarItensLancamento() {
+    const lista = document.getElementById('itensLancamento');
+    lista.innerHTML = '';
+
+    if (!itensLancamento.length) {
+        const vazio = document.createElement('div');
+        vazio.className = 'item-lancamento-vazio';
+        vazio.textContent = 'Nenhum item adicionado.';
+        lista.appendChild(vazio);
+    } else {
+        itensLancamento.forEach(item => {
+            const linha = document.createElement('div');
+            linha.className = 'item-lancamento';
+
+            const nome = document.createElement('span');
+            nome.className = 'item-lancamento-nome';
+            nome.textContent = `${item.quantidade}x ${item.nome}`;
+
+            const valor = document.createElement('strong');
+            valor.textContent = dinheiro(item.preco * item.quantidade);
+
+            const remover = document.createElement('button');
+            remover.type = 'button';
+            remover.className = 'btn btn-secondary';
+            remover.textContent = 'Remover';
+            remover.onclick = () => removerItemLancamento(item.id);
+
+            linha.append(nome, valor, remover);
+            lista.appendChild(linha);
+        });
+    }
+
+    const descricao = itensLancamento
+        .map(item => `${item.quantidade}x ${item.nome}`)
+        .join(', ');
+    const total = itensLancamento.reduce(
+        (soma, item) => soma + item.preco * item.quantidade,
+        0
+    );
+
+    document.getElementById('lancDescricao').value = descricao;
     document.getElementById('lancValor').value =
-        valorTotal.toFixed(2);
+        total ? total.toFixed(2) : '';
 }
 
 async function carregarContasLancamento() {
@@ -1871,99 +1884,39 @@ async function carregarContasLancamento() {
 /* SALVAR LANÇAMENTO */
 
 async function salvarLancamento() {
+    const data = document.getElementById('lancData').value;
+    const tipo = document.getElementById('lancTipo').value;
+    const conta = document.getElementById('lancConta').value;
+    const descricao = document.getElementById('lancDescricao').value.trim();
+    const valor = Number(document.getElementById('lancValor').value);
 
-    const data =
-        document.getElementById(
-            'lancData'
-        ).value;
-
-    const tipo =
-        document.getElementById(
-            'lancTipo'
-        ).value;
-
-    const descricao =
-        document.getElementById(
-            'lancDescricao'
-        ).value.trim();
-
-    const valor =
-        Number(
-            document.getElementById(
-                'lancValor'
-            ).value
-        );
-
-    const conta =
-        document.getElementById(
-            'lancConta'
-        ).value;
-
-
-    if (!data || !descricao || !valor) {
-
-        alert(
-            'Preencha data, descrição e valor.'
-        );
-
+    if (!data || !itensLancamento.length || !descricao || !valor) {
+        alert('Adicione pelo menos um produto ao lançamento.');
         return;
     }
 
-
-    const { error } =
-        await supabaseClient
-            .from('lancamentos')
-            .insert({
-
-                cliente_id: empresaAtual,
-
-                data: data,
-
-                tipo: tipo,
-
-                descricao: descricao,
-
-                valor: valor,
-
-                conta_id: conta || null,
-
-                origem: 'manual'
-
-            });
-
+    const { error } = await supabaseClient
+        .from('lancamentos')
+        .insert({
+            cliente_id: empresaAtual,
+            data,
+            tipo,
+            descricao,
+            valor,
+            conta_id: conta || null,
+            origem: 'produtos'
+        });
 
     if (error) {
-
         console.error(error);
-
-        alert(
-            'Erro ao salvar lançamento.'
-        );
-
+        alert('Erro ao salvar lançamento.');
         return;
     }
 
-
-    alert(
-        'Lançamento salvo com sucesso!'
-    );
-
-
-    document.getElementById(
-        'lancDescricao'
-    ).value = '';
-
-    document.getElementById(
-        'lancValor'
-    ).value = '';
-
-
+    alert('Lançamento salvo com sucesso!');
     fecharModalLancamento();
-
     await carregarDashboard();
-
     await carregarFluxo();
-
 }
 
 
