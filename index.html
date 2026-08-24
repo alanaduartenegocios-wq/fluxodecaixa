@@ -620,6 +620,34 @@ select:focus {
     color: var(--vinho);
 }
 
+.notificacoes-btn {
+    position: relative;
+    border: 1px solid #d7c5ad;
+    border-radius: 9px;
+    background: #fffaf4;
+    color: var(--vinho-escuro);
+    padding: 8px 11px;
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.notificacoes-btn:hover {
+    background: var(--areia);
+}
+
+#whatsappBadge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 19px;
+    height: 19px;
+    padding: 2px 5px;
+    border-radius: 999px;
+    background: var(--vinho);
+    color: #fff;
+    font: 700 10px Arial, sans-serif;
+}
+
 </style>
 </head>
 
@@ -724,6 +752,10 @@ select:focus {
                 📈 Análises
             </button>
 
+            <button onclick="abrirPagina('whatsapp', this)">
+                💬 WhatsApp
+            </button>
+
             <button onclick="abrirPagina('fluxo', this)">
                 💰 Fluxo de Caixa
             </button>
@@ -777,6 +809,10 @@ select:focus {
             </div>
 
             <div class="selects">
+
+                <button type="button" class="notificacoes-btn" onclick="abrirPagina('whatsapp', document.querySelector('.menu button[onclick*=whatsapp]'))" aria-label="Abrir notificações do WhatsApp">
+                    🔔 <span id="whatsappBadge" class="hidden">0</span>
+                </button>
 
                 <select id="empresaSelect" onchange="trocarEmpresa()">
                     <option value="">Selecionar empresa</option>
@@ -880,6 +916,33 @@ select:focus {
                 <table>
                     <thead><tr><th>Produto</th><th>Quantidade vendida</th></tr></thead>
                     <tbody id="analiseProdutosTabela"></tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <section id="pagina-whatsapp" class="hidden">
+            <div class="home-destaque">
+                <h2>Mensagens do WhatsApp</h2>
+                <p>Novas mensagens recebidas pelo WhatsApp conectado desta empresa.</p>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Caixa de entrada</h2>
+                    <button class="btn btn-secondary" onclick="carregarWhatsApp()">Atualizar</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Contato</th>
+                            <th>Mensagem</th>
+                            <th>Recebida em</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="whatsappMensagensTabela"></tbody>
                 </table>
             </div>
         </section>
@@ -1633,6 +1696,11 @@ function abrirPagina(pagina, botao) {
             'Leitura das vendas e dos sabores mais vendidos'
         ],
 
+        whatsapp: [
+            'WhatsApp',
+            'Mensagens e notificações da empresa'
+        ],
+
         fluxo: [
             'Fluxo de Caixa',
             'Controle diário das movimentações'
@@ -1686,6 +1754,7 @@ function abrirPagina(pagina, botao) {
     if (pagina === 'produtos') carregarProdutos();
     if (pagina === 'estoque') carregarEstoque();
     if (pagina === 'analises') carregarAnalises();
+    if (pagina === 'whatsapp') carregarWhatsApp();
 
 }
 
@@ -1806,6 +1875,7 @@ async function carregarDashboard() {
 
     await carregarMeta();
     await atualizarHomeFinanceira(entradas, saidas);
+    await atualizarNotificacoesWhatsApp();
 
 }
 
@@ -1947,6 +2017,101 @@ async function carregarAnalises() {
         linha.append(produto, quantidade);
         tabela.appendChild(linha);
     });
+}
+
+
+/* WHATSAPP */
+
+async function atualizarNotificacoesWhatsApp() {
+    if (!empresaAtual) return;
+
+    const { count, error } = await supabaseClient
+        .from('whatsapp_mensagens')
+        .select('id', { count: 'exact', head: true })
+        .eq('cliente_id', empresaAtual)
+        .eq('lida', false)
+        .eq('de_mim', false);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const aviso = document.getElementById('whatsappBadge');
+    const total = Number(count || 0);
+    aviso.textContent = total > 99 ? '99+' : String(total);
+    aviso.classList.toggle('hidden', total === 0);
+}
+
+async function carregarWhatsApp() {
+    if (!empresaAtual) return;
+
+    const { data, error } = await supabaseClient
+        .from('whatsapp_mensagens')
+        .select('id,nome_contato,telefone,conteudo,tipo,lida,recebida_em')
+        .eq('cliente_id', empresaAtual)
+        .order('recebida_em', { ascending: false })
+        .limit(50);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const tabela = document.getElementById('whatsappMensagensTabela');
+    tabela.innerHTML = '';
+
+    if (!(data || []).length) {
+        tabela.innerHTML = '<tr><td colspan="5">Nenhuma mensagem recebida ainda.</td></tr>';
+        return;
+    }
+
+    data.forEach(mensagem => {
+        const linha = document.createElement('tr');
+        const contato = document.createElement('td');
+        const conteudo = document.createElement('td');
+        const dataHora = document.createElement('td');
+        const status = document.createElement('td');
+        const acao = document.createElement('td');
+
+        contato.textContent = mensagem.nome_contato || mensagem.telefone || 'Contato';
+        conteudo.textContent = mensagem.conteudo || 'Mensagem recebida';
+        dataHora.textContent = mensagem.recebida_em
+            ? new Date(mensagem.recebida_em).toLocaleString('pt-BR')
+            : '—';
+        status.textContent = mensagem.lida ? 'Lida' : 'Nova';
+        status.className = mensagem.lida ? 'status-estoque-ok' : 'status-estoque-baixo';
+
+        if (!mensagem.lida) {
+            const botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = 'btn btn-secondary';
+            botao.textContent = 'Marcar como lida';
+            botao.onclick = () => marcarMensagemLida(mensagem.id);
+            acao.appendChild(botao);
+        }
+
+        linha.append(contato, conteudo, dataHora, status, acao);
+        tabela.appendChild(linha);
+    });
+
+    await atualizarNotificacoesWhatsApp();
+}
+
+async function marcarMensagemLida(id) {
+    const { error } = await supabaseClient
+        .from('whatsapp_mensagens')
+        .update({ lida: true })
+        .eq('id', id)
+        .eq('cliente_id', empresaAtual);
+
+    if (error) {
+        console.error(error);
+        alert('Não foi possível atualizar a mensagem.');
+        return;
+    }
+
+    await carregarWhatsApp();
 }
 
 /* SALDO */
