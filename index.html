@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Fluxo+</title>
+<title>Duarte Flow</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -487,6 +487,12 @@ body {
 
 .logo {
     color: var(--vinho-escuro);
+    font-family: var(--briston);
+    font-size: 29px;
+}
+
+.login-logo {
+    font-family: var(--briston);
 }
 
 .menu button {
@@ -622,7 +628,7 @@ select:focus {
 
 <div id="telaLogin">
     <div class="login-card">
-        <div class="login-logo">Fluxo<span style="color:#2563eb">+</span></div>
+        <div class="login-logo">Duarte <span>Flow</span></div>
         <div class="login-subtitle">Entre para acessar seu controle financeiro.</div>
 
         <form id="formLogin">
@@ -650,7 +656,7 @@ select:focus {
     </div>
 
     <div id="telaRecuperar" class="login-card hidden">
-        <div class="login-logo">Fluxo<span style="color:#2563eb">+</span></div>
+        <div class="login-logo">Duarte <span>Flow</span></div>
         <div class="login-subtitle">Informe seu e-mail para receber o link de redefinição.</div>
 
         <form id="formRecuperarSenha">
@@ -672,7 +678,7 @@ select:focus {
     </div>
 
     <div id="telaNovaSenha" class="login-card hidden">
-        <div class="login-logo">Fluxo<span style="color:#2563eb">+</span></div>
+        <div class="login-logo">Duarte <span>Flow</span></div>
         <div class="login-subtitle">Crie sua nova senha para continuar.</div>
 
         <form id="formNovaSenha">
@@ -702,7 +708,7 @@ select:focus {
 
     <aside class="sidebar">
 
-        <div class="logo">Fluxo<span style="color:#2563eb">+</span></div>
+        <div class="logo">Duarte <span>Flow</span></div>
 
         <div class="menu">
 
@@ -817,7 +823,7 @@ select:focus {
     <div class="home-saudacao">
         <p id="homeData"></p>
         <h2 id="homeSaudacao">Olá 👋</h2>
-        <p>Aqui está o resumo financeiro da sua empresa hoje.</p>
+        <p>Aqui está o resumo financeiro da sua empresa.</p>
     </div>
 
     <div class="home-destaque">
@@ -1769,14 +1775,12 @@ async function carregarDashboard() {
 
 async function atualizarHomeFinanceira(entradas, saidas) {
     const hoje = new Date().toISOString().split('T')[0];
-    const nome = usuarioAtual?.user_metadata?.nome ||
-        usuarioAtual?.user_metadata?.name ||
-        usuarioAtual?.email?.split('@')[0]?.split(/[._-]/)[0] || 'usuário';
-    const hora = new Date().getHours();
-    const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+    const empresaSelecionada = document.getElementById('empresaSelect');
+    const nomeEmpresa = empresaSelecionada?.selectedOptions?.[0]?.textContent ||
+        'sua empresa';
 
     document.getElementById('homeSaudacao').textContent =
-        saudacao + ', ' + nome.charAt(0).toUpperCase() + nome.slice(1) + ' 👋';
+        'Bem-vindo, ' + nomeEmpresa + ' 👋';
     document.getElementById('homeData').textContent =
         new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
 
