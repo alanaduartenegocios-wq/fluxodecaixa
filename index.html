@@ -2030,6 +2030,7 @@ async function carregarContasLancamento() {
             'lancConta'
         );
 
+    if (!select) return;
 
     select.innerHTML =
         '<option value="">Selecionar conta</option>';
@@ -2454,9 +2455,10 @@ async function carregarMeta() {
             : 0;
 
 
-    document.getElementById(
-        'metaFaturamento'
-    ).textContent = dinheiro(valor);
+    const metaFaturamento = document.getElementById('metaFaturamento');
+    if (metaFaturamento) {
+        metaFaturamento.textContent = dinheiro(valor);
+    }
 
 }
 
