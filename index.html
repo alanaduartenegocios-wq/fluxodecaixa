@@ -648,6 +648,152 @@ select:focus {
     font: 700 10px Arial, sans-serif;
 }
 
+/* ABERTURA DUARTE FLOW */
+#telaLogin {
+    min-height: 100vh;
+    padding: 32px;
+    background: var(--fundo);
+}
+
+.login-shell {
+    width: min(100%, 1080px);
+    min-height: 650px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: minmax(320px, .9fr) minmax(370px, 1.1fr);
+    overflow: hidden;
+    border: 1px solid #dfcfbd;
+    border-radius: 26px;
+    background: #fffdf9;
+    box-shadow: 0 20px 60px rgba(86, 28, 36, .10);
+}
+
+.login-apresentacao {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 54px 46px;
+    background: #f7e9d2;
+    color: var(--vinho-escuro);
+}
+
+.login-apresentacao .login-logo {
+    font-family: var(--briston);
+    font-size: 44px;
+    line-height: 1;
+}
+
+.login-apresentacao-texto {
+    max-width: 280px;
+    margin-top: 18px;
+    color: var(--texto-suave);
+    font-size: 16px;
+    line-height: 1.55;
+}
+
+.login-boas-vindas {
+    position: relative;
+    z-index: 1;
+    padding: 25px;
+    border-radius: 20px;
+    background: #f4cf82;
+    color: var(--vinho-escuro);
+}
+
+.login-boas-vindas span {
+    display: block;
+    margin-bottom: 8px;
+    font-family: var(--briston);
+    font-size: 31px;
+}
+
+.login-boas-vindas p {
+    font-size: 14px;
+}
+
+.login-curvas {
+    position: absolute;
+    right: -65px;
+    bottom: -75px;
+    width: 320px;
+    height: 200px;
+    transform: rotate(-12deg);
+}
+
+.login-curvas i {
+    position: absolute;
+    display: block;
+    border: 18px solid var(--vinho);
+    border-radius: 50%;
+}
+
+.login-curvas i:nth-child(1) { width: 310px; height: 210px; opacity: .94; }
+.login-curvas i:nth-child(2) { width: 255px; height: 165px; left: 30px; top: 25px; border-color: #c79052; }
+.login-curvas i:nth-child(3) { width: 195px; height: 125px; left: 60px; top: 55px; border-color: var(--areia); }
+
+.login-forms {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 55px;
+    background: #fffdf9;
+}
+
+.login-forms .login-card {
+    width: min(100%, 390px);
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.login-forms .login-card h1 {
+    margin-bottom: 8px;
+    font-family: var(--briston);
+    font-size: 38px;
+    line-height: 1.1;
+    color: var(--vinho-escuro);
+}
+
+.login-mobile-brand {
+    display: none;
+    margin-bottom: 35px;
+    font-family: var(--briston);
+    font-size: 32px;
+    color: var(--vinho-escuro);
+}
+
+.login-forms .login-subtitle {
+    margin-bottom: 32px;
+    color: var(--texto-suave);
+}
+
+.login-forms .form-group {
+    margin-bottom: 19px;
+}
+
+.login-forms .form-group label {
+    color: var(--vinho-escuro);
+}
+
+.login-forms .btn {
+    margin-top: 8px;
+    padding: 13px 18px;
+}
+
+@media(max-width: 720px) {
+    #telaLogin { padding: 0; background: #fffdf9; }
+    .login-shell { min-height: 100vh; grid-template-columns: 1fr; border: 0; border-radius: 0; box-shadow: none; }
+    .login-apresentacao { display: none; }
+    .login-forms { align-items: flex-start; padding: 56px 30px; }
+    .login-mobile-brand { display: block; }
+    .login-forms .login-card h1 { font-size: 34px; }
+}
+
 </style>
 </head>
 
@@ -655,80 +801,79 @@ select:focus {
 
 
 <div id="telaLogin">
-    <div class="login-card">
-        <div class="login-logo">Duarte <span>Flow</span></div>
-        <div class="login-subtitle">Entre para acessar seu controle financeiro.</div>
+    <div class="login-shell">
+        <section class="login-apresentacao">
+            <div>
+                <div class="login-logo">Duarte <span>Flow</span></div>
+                <p class="login-apresentacao-texto">Organize as finanças da sua empresa de um jeito simples, claro e seguro.</p>
+            </div>
+            <div class="login-boas-vindas">
+                <span>Bem-vinda!</span>
+                <p>Seu controle financeiro começa aqui.</p>
+            </div>
+            <div class="login-curvas" aria-hidden="true"><i></i><i></i><i></i></div>
+        </section>
 
-        <form id="formLogin">
-            <div class="form-group">
-                <label for="loginEmail">E-mail</label>
-                <input type="email" id="loginEmail"
-                       autocomplete="username" required>
+        <section class="login-forms">
+            <div class="login-card" id="cartaoLogin">
+                <div class="login-mobile-brand">Duarte <span>Flow</span></div>
+                <h1>Que bom te ver!</h1>
+                <div class="login-subtitle">Entre para acessar sua empresa.</div>
+
+                <form id="formLogin">
+                    <div class="form-group">
+                        <label for="loginEmail">E-mail</label>
+                        <input type="email" id="loginEmail" autocomplete="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginSenha">Senha</label>
+                        <input type="password" id="loginSenha" autocomplete="current-password" required>
+                    </div>
+
+                    <button type="submit" class="btn" id="btnLogin">Entrar</button>
+                    <div id="loginErro" class="login-error"></div>
+                    <button type="button" class="login-link" onclick="abrirRecuperacaoSenha()">Esqueci minha senha</button>
+                </form>
             </div>
 
-            <div class="form-group">
-                <label for="loginSenha">Senha</label>
-                <input type="password" id="loginSenha"
-                       autocomplete="current-password" required>
+            <div id="telaRecuperar" class="login-card hidden">
+                <div class="login-mobile-brand">Duarte <span>Flow</span></div>
+                <h1>Recuperar senha</h1>
+                <div class="login-subtitle">Informe seu e-mail para receber o link de redefinição.</div>
+
+                <form id="formRecuperarSenha">
+                    <div class="form-group">
+                        <label for="recuperarEmail">E-mail</label>
+                        <input type="email" id="recuperarEmail" autocomplete="email" required>
+                    </div>
+                    <button type="submit" class="btn" id="btnRecuperarSenha">Enviar link de recuperação</button>
+                    <div id="recuperarErro" class="login-error"></div>
+                    <div id="recuperarSucesso" class="login-success"></div>
+                    <button type="button" class="login-link" onclick="voltarParaLogin()">Voltar para o login</button>
+                </form>
             </div>
 
-            <button type="submit" class="btn" id="btnLogin">
-                Entrar
-            </button>
+            <div id="telaNovaSenha" class="login-card hidden">
+                <div class="login-mobile-brand">Duarte <span>Flow</span></div>
+                <h1>Nova senha</h1>
+                <div class="login-subtitle">Crie sua nova senha para continuar.</div>
 
-            <div id="loginErro" class="login-error"></div>
-            <button type="button" class="login-link" onclick="abrirRecuperacaoSenha()">
-                Esqueci minha senha
-            </button>
-        </form>
-    </div>
-
-    <div id="telaRecuperar" class="login-card hidden">
-        <div class="login-logo">Duarte <span>Flow</span></div>
-        <div class="login-subtitle">Informe seu e-mail para receber o link de redefinição.</div>
-
-        <form id="formRecuperarSenha">
-            <div class="form-group">
-                <label for="recuperarEmail">E-mail</label>
-                <input type="email" id="recuperarEmail" autocomplete="email" required>
+                <form id="formNovaSenha">
+                    <div class="form-group">
+                        <label for="novaSenha">Nova senha</label>
+                        <input type="password" id="novaSenha" minlength="6" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmarNovaSenha">Confirmar nova senha</label>
+                        <input type="password" id="confirmarNovaSenha" minlength="6" autocomplete="new-password" required>
+                    </div>
+                    <button type="submit" class="btn" id="btnNovaSenha">Salvar nova senha</button>
+                    <div id="novaSenhaErro" class="login-error"></div>
+                    <div id="novaSenhaSucesso" class="login-success"></div>
+                </form>
             </div>
-
-            <button type="submit" class="btn" id="btnRecuperarSenha">
-                Enviar link de recuperação
-            </button>
-
-            <div id="recuperarErro" class="login-error"></div>
-            <div id="recuperarSucesso" class="login-success"></div>
-            <button type="button" class="login-link" onclick="voltarParaLogin()">
-                Voltar para o login
-            </button>
-        </form>
-    </div>
-
-    <div id="telaNovaSenha" class="login-card hidden">
-        <div class="login-logo">Duarte <span>Flow</span></div>
-        <div class="login-subtitle">Crie sua nova senha para continuar.</div>
-
-        <form id="formNovaSenha">
-            <div class="form-group">
-                <label for="novaSenha">Nova senha</label>
-                <input type="password" id="novaSenha" minlength="6"
-                       autocomplete="new-password" required>
-            </div>
-
-            <div class="form-group">
-                <label for="confirmarNovaSenha">Confirmar nova senha</label>
-                <input type="password" id="confirmarNovaSenha" minlength="6"
-                       autocomplete="new-password" required>
-            </div>
-
-            <button type="submit" class="btn" id="btnNovaSenha">
-                Salvar nova senha
-            </button>
-
-            <div id="novaSenhaErro" class="login-error"></div>
-            <div id="novaSenhaSucesso" class="login-success"></div>
-        </form>
+        </section>
     </div>
 </div>
 
@@ -1330,7 +1475,7 @@ function mostrarErroLogin(mensagem) {
 }
 
 function abrirRecuperacaoSenha() {
-    document.querySelector('#telaLogin > .login-card').classList.add('hidden');
+    document.getElementById('cartaoLogin').classList.add('hidden');
     document.getElementById('telaRecuperar').classList.remove('hidden');
     document.getElementById('recuperarEmail').value =
         document.getElementById('loginEmail').value.trim();
@@ -1341,11 +1486,11 @@ function abrirRecuperacaoSenha() {
 function voltarParaLogin() {
     document.getElementById('telaRecuperar').classList.add('hidden');
     document.getElementById('telaNovaSenha').classList.add('hidden');
-    document.querySelector('#telaLogin > .login-card').classList.remove('hidden');
+    document.getElementById('cartaoLogin').classList.remove('hidden');
 }
 
 function mostrarTelaNovaSenha() {
-    document.querySelector('#telaLogin > .login-card').classList.add('hidden');
+    document.getElementById('cartaoLogin').classList.add('hidden');
     document.getElementById('telaRecuperar').classList.add('hidden');
     document.getElementById('telaNovaSenha').classList.remove('hidden');
     ocultarMensagem('novaSenhaErro');
@@ -1431,7 +1576,7 @@ async function salvarNovaSenha(event) {
     window.history.replaceState({}, document.title, window.location.pathname);
     setTimeout(() => {
         document.getElementById('telaNovaSenha').classList.add('hidden');
-        document.querySelector('#telaLogin > .login-card').classList.remove('hidden');
+        document.getElementById('cartaoLogin').classList.remove('hidden');
         document.getElementById('loginSenha').focus();
     }, 1800);
 }
