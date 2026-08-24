@@ -10,7 +10,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Montserrat:wght@400;500;600;700&family=Petit+Formal+Script&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 * {
@@ -472,6 +472,8 @@ td {
     --texto-suave: #735A57;
     --briston: "DM Serif Display", Georgia, "Times New Roman", serif;
     --pierson: "Montserrat", Arial, Helvetica, sans-serif;
+    --formal: "Petit Formal Script", cursive;
+    --quicksand: "Quicksand", Arial, Helvetica, sans-serif;
 }
 
 body {
@@ -797,6 +799,25 @@ select:focus {
 .home-resumo-card { min-height: 120px; padding: 20px; border: 1px solid #dfcfbd; border-radius: 14px; background: #fffdf9; box-shadow: 0 10px 30px rgba(86, 28, 36, .04); font-family: var(--pierson); color: var(--texto-suave); font-size: 12px; line-height: 1.4; }
 .home-resumo-card strong { display: block; margin-top: 16px; color: var(--vinho-escuro); font-family: var(--pierson); font-size: 20px; letter-spacing: -.03em; }
 @media(max-width: 900px) { .home-resumo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* TIPOGRAFIA */
+#telaLogin .login-logo,
+#telaLogin .login-mobile-brand {
+    font-family: var(--formal);
+    font-weight: 400;
+}
+
+#telaLogin .login-apresentacao .login-logo {
+    font-size: 52px;
+}
+
+.topbar h1,
+main .panel-header h2,
+#pagina-home .home-resumo-titulo,
+#pagina-home .home-destaque h2 {
+    font-family: var(--quicksand);
+    font-weight: 700;
+}
 
 </style>
 </head>
