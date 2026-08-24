@@ -784,7 +784,7 @@ td {
                         <h2>Produtos</h2>
                         <p>Produtos cadastrados para venda individual.</p>
                     </div>
-                    <button class="btn" onclick="carregarProdutos()">Atualizar lista</button>
+                    <div><button class="btn btn-secondary" onclick="carregarProdutos()">Atualizar</button> <button class="btn" onclick="abrirNovoProduto()">+ Incluir produto</button></div>
                 </div>
                 <table>
                     <thead>
@@ -811,7 +811,7 @@ td {
                         <h2>Estoque</h2>
                         <p>Informe quantos quilos estão disponíveis e defina o mínimo para reposição.</p>
                     </div>
-                    <button class="btn" onclick="carregarEstoque()">Atualizar estoque</button>
+                    <div><button class="btn btn-secondary" onclick="carregarEstoque()">Atualizar</button> <button class="btn" onclick="abrirNovoProduto()">+ Incluir item</button></div>
                 </div>
                 <table>
                     <thead>
@@ -2188,6 +2188,7 @@ async function carregarProdutos() {
 
         const acao = document.createElement('td');
         acao.appendChild(criarBotaoEditar(produto));
+        acao.appendChild(criarBotaoExcluir(produto));
         tr.appendChild(acao);
         tabela.appendChild(tr);
     });
@@ -2233,10 +2234,78 @@ async function carregarEstoque() {
         tr.appendChild(status);
 
         const acao = document.createElement('td');
-        acao.appendChild(criarBotaoEditar(produto, 'Atualizar'));
+        acao.appendChild(criarBotaoEditar(produto, 'Editar'));
+        acao.appendChild(criarBotaoZerar(produto));
+        acao.appendChild(criarBotaoExcluir(produto));
         tr.appendChild(acao);
         tabela.appendChild(tr);
     });
+}
+
+function criarBotaoExcluir(produto) {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'btn btn-secondary';
+    botao.textContent = 'Apagar';
+    botao.onclick = () => apagarProduto(produto.id, produto.nome);
+    return botao;
+}
+
+function criarBotaoZerar(produto) {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'btn btn-secondary';
+    botao.textContent = 'Zerar';
+    botao.onclick = () => zerarEstoque(produto.id, produto.nome);
+    return botao;
+}
+
+function abrirNovoProduto() {
+    document.getElementById('produtoEditId').value = '';
+    document.getElementById('produtoEditNome').value = '';
+    document.getElementById('produtoEditPreco').value = '';
+    document.getElementById('produtoEditEstoque').value = 0;
+    document.getElementById('produtoEditMinimo').value = 0;
+    document.getElementById('modalProduto').style.display = 'flex';
+}
+
+async function zerarEstoque(id, nome) {
+    if (!confirm('Zerar o estoque de ' + nome + '? O produto será mantido.')) return;
+
+    const { error } = await supabaseClient
+        .from('produtos')
+        .update({ estoque_kg: 0 })
+        .eq('id', id)
+        .eq('cliente_id', empresaAtual);
+
+    if (error) {
+        console.error(error);
+        alert('Não foi possível zerar o estoque.');
+        return;
+    }
+
+    await carregarProdutos();
+    await carregarEstoque();
+}
+
+async function apagarProduto(id, nome) {
+    if (!confirm('Apagar permanentemente o produto ' + nome + '?')) return;
+
+    const { error } = await supabaseClient
+        .from('produtos')
+        .delete()
+        .eq('id', id)
+        .eq('cliente_id', empresaAtual);
+
+    if (error) {
+        console.error(error);
+        alert('Não foi possível apagar o produto.');
+        return;
+    }
+
+    await carregarProdutos();
+    await carregarEstoque();
+    await carregarProdutosLancamento();
 }
 
 function abrirModalProduto(produtoId) {
@@ -2270,16 +2339,24 @@ async function salvarProduto() {
         return;
     }
 
-    const { error } = await supabaseClient
-        .from('produtos')
-        .update({
-            nome,
-            preco_venda: preco,
-            estoque_kg: estoque,
-            estoque_minimo_kg: minimo
-        })
-        .eq('id', id)
-        .eq('cliente_id', empresaAtual);
+    const dadosProduto = {
+        nome,
+        preco_venda: preco,
+        estoque_kg: estoque,
+        estoque_minimo_kg: minimo
+    };
+
+    const resposta = id
+        ? await supabaseClient
+            .from('produtos')
+            .update(dadosProduto)
+            .eq('id', id)
+            .eq('cliente_id', empresaAtual)
+        : await supabaseClient
+            .from('produtos')
+            .insert({ ...dadosProduto, cliente_id: empresaAtual, ativo: true });
+
+    const { error } = resposta;
 
     if (error) {
         console.error(error);
